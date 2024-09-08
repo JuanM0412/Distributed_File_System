@@ -46,16 +46,19 @@ class Server(nameNode_pb2_grpc.nameNodeServiceServicer):
         username = request.username
         password = request.password
 
-        check_unique_name = database.users.find_one({"username": username})
+        print('AddUser method')
+
+        check_unique_name = database.users.find_one({'username': username})
         if check_unique_name:
-            return nameNode_pb2.AddUserResponse(status="Name unavailable")
+            return nameNode_pb2.AddUserResponse(status='Name unavailable')
         
         # Instance of the model
-        user_info = User(username, password)
+        user_info = User(username=username, password=password)
+        print('user:', user_info.model_dump())
 
         # Add the dataNode in the DB
-        database.users.insert_one(user_info.dict())
-        return nameNode_pb2.AddUserResponse(status="User created successfully")
+        database.users.insert_one(user_info.model_dump())
+        return nameNode_pb2.AddUserResponse(status='User created successfully')
     
 
     def ValidateUser(self, request, context):
@@ -64,12 +67,12 @@ class Server(nameNode_pb2_grpc.nameNodeServiceServicer):
         password = request.password
 
         # Validate that exist
-        user = database.users.find_one({"username": username, "password": password})
+        user = database.users.find_one({'username': username, 'password': password})
 
         if user:
-            return nameNode_pb2.AddUserResponse(status="User logged successfully")
+            return nameNode_pb2.AddUserResponse(status='User logged successfully')
         else:
-            return nameNode_pb2.AddUserResponse(status="Invalid username or password")
+            return nameNode_pb2.AddUserResponse(status='Invalid username or password')
 
 
 def serve(ip: str, port: int):

@@ -1,4 +1,4 @@
-from src.proto import data_node_pb2, data_node_pb2_grpc
+from src.proto import data_node_pb2, data_node_pb2_grpc, nameNode_pb2, nameNode_pb2_grpc
 import grpc, os
 from concurrent import futures
 
@@ -17,13 +17,21 @@ def get_file_chunks(file_path):
 
 
 class Client:
-    def __init__(self, ip: str, port: int):
-        print(f"Connecting to {ip}:{port}")
-        self.channel = grpc.insecure_channel(f"{ip}:{port}")
-        self.stub = data_node_pb2_grpc.DataNodeStub(self.channel)
+    def __init__(self, server_ip: str, server_port: int):
+        print(f"Connecting to {server_ip}:{server_port}")
+        self.server_channel = grpc.insecure_channel(f"{server_ip}:{server_port}")
+        self.server_stub = nameNode_pb2_grpc.nameNodeServiceStub(self.server_channel)
+
+    # Add connection with the data_node
+    """def UploadFile(self, filename: str):
+        chunks = get_file_chunks(filename)
+        data_node_channel = grpc.insecure_channel(f"{data_node_ip}:{data_node_port}")
+        data_node_stub = nameNode_pb2_grpc.nameNodeServiceStub(data_node_channel)
+        response = data_node_stub.SendFile(chunks.__iter__())
+        print(f'File uploaded, server reported length: {response.length}')"""
 
     
-    def UploadFile(self, filename: str):
-        chunks = get_file_chunks(filename)
-        response = self.stub.SendFile(chunks.__iter__())
-        print(f'File uploaded, server reported length: {response.length}')
+    def Register(self, username: str, password: str):
+        print('Register method')
+        response = self.server_stub.AddUser(nameNode_pb2.AddUserRequest(username=username, password=password))
+        print(f'Response: {response.status}')
