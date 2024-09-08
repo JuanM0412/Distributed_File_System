@@ -1,4 +1,4 @@
-from src.proto import data_node_pb2, data_node_pb2_grpc
+from src.proto import data_node_pb2, data_node_pb2_grpc, nameNode_pb2, nameNode_pb2_grpc
 import grpc, os
 from concurrent import futures
 
@@ -20,6 +20,10 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         self.ip = ip
         self.port = port
         self.dir = dir
+        self.capacity = 1000 # Test value
+
+        self.name_node_channel = grpc.insecure_channel(f'{server_ip}:{server_port}')
+        self.name_node_stub = nameNode_pb2_grpc.nameNodeServiceStub(self.name_node_channel)
 
 
     def SendFile(self, request_iterator, context):
@@ -35,3 +39,8 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         server.add_insecure_port(f'{self.ip}:{self.port}')
         server.start()
         server.wait_for_termination()
+
+
+    def Register(self):
+        response = self.name_node_stub.Register(nameNode_pb2.RegisterRequest(ip=self.ip, port=str(self.port), storage=self.capacity))
+        print(f'Registered with id: {response.id}')

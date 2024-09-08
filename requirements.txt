@@ -1,3 +1,6 @@
 grpcio
 grpcio-tools
 python-dotenv
+pydantic
+pymongo
+protobuf==5.28.0
