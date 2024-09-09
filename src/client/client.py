@@ -1,6 +1,6 @@
-from src.proto import data_node_pb2, data_node_pb2_grpc, nameNode_pb2, nameNode_pb2_grpc
+from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
+from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
 import grpc, os
-from concurrent import futures
 
 
 CHUNK_SIZE = 1024 * 1024 # 1MB
@@ -20,12 +20,12 @@ class Client:
     def __init__(self, server_ip: str, server_port: int):
         print(f'Connecting to {server_ip}:{server_port}')
         self.server_channel = grpc.insecure_channel(f'{server_ip}:{server_port}')
-        self.server_stub = nameNode_pb2_grpc.nameNodeServiceStub(self.server_channel)
+        self.server_stub = name_node_pb2_grpc.nameNodeServiceStub(self.server_channel)
 
     
     def GetDataNode(self, filename: str):
         print('GetDataNodes method')
-        response = self.server_stub.GetDataNodes(nameNode_pb2.DataNodesRequest(file=filename))
+        response = self.server_stub.GetDataNodes(name_node_pb2.DataNodesRequest(file=filename))
         print('DataNodes:', response.nodes)
         return response.nodes
 
@@ -45,5 +45,5 @@ class Client:
     
     def Register(self, username: str, password: str):
         print('Register method')
-        response = self.server_stub.AddUser(nameNode_pb2.AddUserRequest(username=username, password=password))
+        response = self.server_stub.AddUser(name_node_pb2.AddUserRequest(username=username, password=password))
         print(f'Response: {response.status}')

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package nameNode;
 
-service nameNodeService {
+service NameNodeService {
   // DataNodes
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc GetDataNodes (DataNodesRequest) returns (DataNodesResponse);

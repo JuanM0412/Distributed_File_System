@@ -3,9 +3,9 @@
 import grpc
 import warnings
 
-from . import nameNode_pb2 as nameNode__pb2
+from . import name_node_pb2 as name__node__pb2
 
-GRPC_GENERATED_VERSION = '1.66.1'
+GRPC_GENERATED_VERSION = '1.66.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in nameNode_pb2_grpc.py depends on'
+        + f' but the generated code in name_node_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -36,23 +36,23 @@ class nameNodeServiceStub(object):
         """
         self.Register = channel.unary_unary(
                 '/nameNode.nameNodeService/Register',
-                request_serializer=nameNode__pb2.RegisterRequest.SerializeToString,
-                response_deserializer=nameNode__pb2.RegisterResponse.FromString,
+                request_serializer=name__node__pb2.RegisterRequest.SerializeToString,
+                response_deserializer=name__node__pb2.RegisterResponse.FromString,
                 _registered_method=True)
         self.GetDataNodes = channel.unary_unary(
                 '/nameNode.nameNodeService/GetDataNodes',
-                request_serializer=nameNode__pb2.DataNodesRequest.SerializeToString,
-                response_deserializer=nameNode__pb2.DataNodesResponse.FromString,
+                request_serializer=name__node__pb2.DataNodesRequest.SerializeToString,
+                response_deserializer=name__node__pb2.DataNodesResponse.FromString,
                 _registered_method=True)
         self.AddUser = channel.unary_unary(
                 '/nameNode.nameNodeService/AddUser',
-                request_serializer=nameNode__pb2.AddUserRequest.SerializeToString,
-                response_deserializer=nameNode__pb2.AddUserResponse.FromString,
+                request_serializer=name__node__pb2.AddUserRequest.SerializeToString,
+                response_deserializer=name__node__pb2.AddUserResponse.FromString,
                 _registered_method=True)
         self.ValidateUser = channel.unary_unary(
                 '/nameNode.nameNodeService/ValidateUser',
-                request_serializer=nameNode__pb2.ValidateUserRequest.SerializeToString,
-                response_deserializer=nameNode__pb2.ValidateUserResponse.FromString,
+                request_serializer=name__node__pb2.ValidateUserRequest.SerializeToString,
+                response_deserializer=name__node__pb2.ValidateUserResponse.FromString,
                 _registered_method=True)
 
 
@@ -90,23 +90,23 @@ def add_nameNodeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Register': grpc.unary_unary_rpc_method_handler(
                     servicer.Register,
-                    request_deserializer=nameNode__pb2.RegisterRequest.FromString,
-                    response_serializer=nameNode__pb2.RegisterResponse.SerializeToString,
+                    request_deserializer=name__node__pb2.RegisterRequest.FromString,
+                    response_serializer=name__node__pb2.RegisterResponse.SerializeToString,
             ),
             'GetDataNodes': grpc.unary_unary_rpc_method_handler(
                     servicer.GetDataNodes,
-                    request_deserializer=nameNode__pb2.DataNodesRequest.FromString,
-                    response_serializer=nameNode__pb2.DataNodesResponse.SerializeToString,
+                    request_deserializer=name__node__pb2.DataNodesRequest.FromString,
+                    response_serializer=name__node__pb2.DataNodesResponse.SerializeToString,
             ),
             'AddUser': grpc.unary_unary_rpc_method_handler(
                     servicer.AddUser,
-                    request_deserializer=nameNode__pb2.AddUserRequest.FromString,
-                    response_serializer=nameNode__pb2.AddUserResponse.SerializeToString,
+                    request_deserializer=name__node__pb2.AddUserRequest.FromString,
+                    response_serializer=name__node__pb2.AddUserResponse.SerializeToString,
             ),
             'ValidateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.ValidateUser,
-                    request_deserializer=nameNode__pb2.ValidateUserRequest.FromString,
-                    response_serializer=nameNode__pb2.ValidateUserResponse.SerializeToString,
+                    request_deserializer=name__node__pb2.ValidateUserRequest.FromString,
+                    response_serializer=name__node__pb2.ValidateUserResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -134,8 +134,8 @@ class nameNodeService(object):
             request,
             target,
             '/nameNode.nameNodeService/Register',
-            nameNode__pb2.RegisterRequest.SerializeToString,
-            nameNode__pb2.RegisterResponse.FromString,
+            name__node__pb2.RegisterRequest.SerializeToString,
+            name__node__pb2.RegisterResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -161,8 +161,8 @@ class nameNodeService(object):
             request,
             target,
             '/nameNode.nameNodeService/GetDataNodes',
-            nameNode__pb2.DataNodesRequest.SerializeToString,
-            nameNode__pb2.DataNodesResponse.FromString,
+            name__node__pb2.DataNodesRequest.SerializeToString,
+            name__node__pb2.DataNodesResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -188,8 +188,8 @@ class nameNodeService(object):
             request,
             target,
             '/nameNode.nameNodeService/AddUser',
-            nameNode__pb2.AddUserRequest.SerializeToString,
-            nameNode__pb2.AddUserResponse.FromString,
+            name__node__pb2.AddUserRequest.SerializeToString,
+            name__node__pb2.AddUserResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -215,8 +215,8 @@ class nameNodeService(object):
             request,
             target,
             '/nameNode.nameNodeService/ValidateUser',
-            nameNode__pb2.ValidateUserRequest.SerializeToString,
-            nameNode__pb2.ValidateUserResponse.FromString,
+            name__node__pb2.ValidateUserRequest.SerializeToString,
+            name__node__pb2.ValidateUserResponse.FromString,
             options,
             channel_credentials,
             insecure,
