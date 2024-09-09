@@ -31,7 +31,7 @@ message DataNodesResponse {
 }
 
 message DataNodeInfo {
-  int32 id = 1;
+  string id = 1;
   string ip = 2;
   string port = 3;
   int32 storage = 4;

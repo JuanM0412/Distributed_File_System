@@ -21,6 +21,7 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         self.port = port
         self.dir = dir
         self.capacity = 1000 # Test value
+        self.id = None
 
         self.name_node_channel = grpc.insecure_channel(f'{server_ip}:{server_port}')
         self.name_node_stub = nameNode_pb2_grpc.nameNodeServiceStub(self.name_node_channel)
@@ -43,4 +44,5 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
 
     def Register(self):
         response = self.name_node_stub.Register(nameNode_pb2.RegisterRequest(ip=self.ip, port=str(self.port), storage=self.capacity))
-        print(f'Registered with id: {response.id}')
+        self.id = response.id
+        print(f'Registered with id: {self.id}')

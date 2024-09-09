@@ -9,7 +9,9 @@ load_dotenv()
 
 if __name__ == '__main__':
     #client = Client(os.getenv('DATA_NODE_IP'), os.getenv('DATA_NODE_PORT'))
-    #client.UploadFile('test.txt')
+    #
     client = Client(SERVER_IP, SERVER_PORT)
     print('Calling Register method...')
     client.Register(username='JuanM0412', password='Test123')
+    input('Press Enter to continue...')
+    client.UploadFile('test.txt')
