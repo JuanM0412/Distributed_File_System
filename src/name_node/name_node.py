@@ -76,7 +76,7 @@ class Server(name_node_pb2_grpc.nameNodeServiceServicer):
             return name_node_pb2.AddUserResponse(status='Invalid username or password')
 
 
-def serve(ip: str, port: int):
+def StartServer(ip: str, port: int):
     print('Server is running')
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     name_node_pb2_grpc.add_nameNodeServiceServicer_to_server(Server(ip=ip, port=port), server)

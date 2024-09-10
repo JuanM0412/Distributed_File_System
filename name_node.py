@@ -1,6 +1,10 @@
 from src.name_node.name_node import *
-from config.env import SERVER_IP, SERVER_PORT
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv()
 
 
 if __name__ == '__main__':
-    serve(SERVER_IP, SERVER_PORT)
+    StartServer(os.getenv('SERVER_IP'), os.getenv('SERVER_PORT'))
