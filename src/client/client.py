@@ -1,19 +1,7 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
-import grpc, os
-
-
-CHUNK_SIZE = 1024 * 1024 # 1MB
-
-
-def GetFileChunks(file_path):
-    with open(file_path, 'rb') as f:
-        while True:
-            chunk = f.read(CHUNK_SIZE)
-            if not chunk:
-                break
-            print(f'Sending chunk of size: {len(chunk)} bytes')
-            yield data_node_pb2.Chunk(buffer=chunk)
+from src.utils import *
+import grpc
 
 
 class Client:
@@ -27,9 +15,7 @@ class Client:
 
     
     def GetDataNodes(self, filename: str):
-        print('GetDataNodes method')
         response = self.server_stub.GetDataNodes(name_node_pb2.DataNodesRequest(file=filename))
-        print('DataNodes:', response.nodes)
         return response.nodes
     
 
@@ -48,8 +34,20 @@ class Client:
         response = data_node_stub.SendFile(chunks.__iter__())
         print(f'File uploaded, server reported length: {response.length}')
 
+
+    def DownloadFile(self, filename: str):
+        data_nodes = self.GetDataNodes(filename)
+        data_node_ip, data_node_port = self.GetDataNode(data_nodes[0])
+        print(f'{data_node_ip}:{data_node_port}')
+
+        data_node_channel = grpc.insecure_channel(f'{data_node_ip}:{data_node_port}')
+        data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
+
+        response = data_node_stub.GetFile(data_node_pb2.GetFileRequest(filename=filename))
+
+        SaveChunksToFile(response, filename)
+
     
     def Register(self, username: str, password: str):
-        print('Register method')
         response = self.server_stub.AddUser(name_node_pb2.AddUserRequest(username=username, password=password))
         print(f'Response: {response.status}')

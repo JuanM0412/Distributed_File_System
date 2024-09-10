@@ -1,18 +1,8 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
+from src.utils import *
 import grpc, os
 from concurrent import futures
-
-
-CHUNK_SIZE = 1024 * 1024 # 1MB
-
-
-def SaveChunksToFile(chunks, filename):
-    with open(filename, 'wb') as f:
-        for i, chunk in enumerate(chunks):
-            print(f"Received chunk {i+1}, size: {len(chunk.buffer)} bytes")
-            f.write(chunk.buffer)
-    print(f"File saved: {filename}")
 
 
 class DataNode(data_node_pb2_grpc.DataNodeServicer):
@@ -33,6 +23,15 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         SaveChunksToFile(request_iterator, filename)
         file_size = os.path.getsize(filename)
         return data_node_pb2.Reply(length=file_size)
+    
+
+    def GetFile(self, request, context):
+        filename = os.path.join(self.dir, request.filename)
+        if not os.path.exists(filename):
+            context.abort(grpc.StatusCode.NOT_FOUND, f"File {request.filename} not found")
+
+        for chunk in GetFileChunks(filename):
+            yield chunk
     
 
     def StartServer(self):

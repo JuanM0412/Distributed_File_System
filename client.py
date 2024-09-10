@@ -1,4 +1,4 @@
-import threading
+import os
 from src.client.client import *
 from dotenv import load_dotenv
 
@@ -12,3 +12,4 @@ if __name__ == '__main__':
     client.Register(username='JuanM0412', password='Test123')
     input('Press Enter to continue...')
     client.UploadFile('test.txt')
+    client.DownloadFile('test1.txt')
