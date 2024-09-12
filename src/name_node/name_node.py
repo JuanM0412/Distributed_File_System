@@ -11,14 +11,14 @@ class Server(name_node_pb2_grpc.nameNodeServiceServicer):
         self.port = port
 
 
-    def Register(self, request, context):
+    def Register(self, request):
         # Extract the info about the dataNode.
         ip = request.ip
         port = request.port
-        storage = request.storage
+        capacity_MB = request.CapacityMB
 
         # Instance of the model
-        data_node_info = DataNode(ip=ip, port=port, storage=storage)
+        data_node_info = DataNode(Ip=ip, Port=port, CapacityMB=capacity_MB, IsActive=True, Blocks=[])
         print('data:', data_node_info.model_dump())
 
         # Add the dataNode in the DB
@@ -28,7 +28,7 @@ class Server(name_node_pb2_grpc.nameNodeServiceServicer):
         return name_node_pb2.RegisterResponse(id=str(data_node.inserted_id))
     
 
-    def GetDataNodes(self, request, context):
+    def GetDataNodesForUpload(self, request):
         file = request.file
         data_nodes = list(database.dataNodes.find())
 
@@ -41,8 +41,22 @@ class Server(name_node_pb2_grpc.nameNodeServiceServicer):
         
         return response
     
+    def GetDataNodesForDownload(self, request):
+        file = request.file
+        username = request.username
+        data_nodes = list(database.dataNodes.find())
 
-    def AddUser(self, request, context):
+        response = name_node_pb2.DataNodesResponse()
+        for data_node in data_nodes:
+            data_node_info = name_node_pb2.DataNodeInfo(id=str(data_node['_id']), ip=str(data_node['ip']), port=str(data_node['port']), storage=data_node['storage'])
+            response.nodes.append(data_node_info)
+            #This break will be in this for while we realize how choose in which datanodes we are going to save a file. For the same reason I asked for the filename. In this way, we are going to add the files just in the first data_node, then it will be different
+            break 
+        
+        return response
+    
+
+    def AddUser(self, request):
         # Extract the info about the user.
         username = request.username
         password = request.password
@@ -62,7 +76,7 @@ class Server(name_node_pb2_grpc.nameNodeServiceServicer):
         return name_node_pb2.AddUserResponse(status='User created successfully')
     
 
-    def ValidateUser(self, request, context):
+    def ValidateUser(self, request):
         # Extract the info about the user.
         username = request.username
         password = request.password

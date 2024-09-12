@@ -43,6 +43,6 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
 
 
     def Register(self):
-        response = self.name_node_stub.Register(name_node_pb2.RegisterRequest(ip=self.ip, port=str(self.port), storage=self.capacity))
+        response = self.name_node_stub.Register(name_node_pb2.RegisterRequest(ip=self.ip, port=str(self.port), capacity_MB=self.capacity))
         self.id = response.id
         print(f'Registered with id: {self.id}')

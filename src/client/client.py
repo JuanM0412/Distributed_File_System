@@ -14,17 +14,21 @@ class Client:
         self.server_stub = name_node_pb2_grpc.nameNodeServiceStub(self.server_channel)
 
     
-    def GetDataNodes(self, filename: str):
-        response = self.server_stub.GetDataNodes(name_node_pb2.DataNodesRequest(file=filename))
+    def GetDataNodesForUpload(self, filename: str):
+        response = self.server_stub.GetDataNodesForUpload(name_node_pb2.DataNodesRequest(file=filename))
         return response.nodes
     
-
+    def GetDataNodesForDownload(self, filename: str):
+        response = self.server_stub.GetDataNodesForDownload(name_node_pb2.DataNodesRequest(file=filename))
+        return response.nodes
+    
+    
     def GetDataNode(self, data_node):
         return data_node.ip, data_node.port
 
 
     def UploadFile(self, filename: str):
-        data_nodes = self.GetDataNodes(filename)
+        data_nodes = self.GetDataNodesForUpload(filename)
         data_node_ip, data_node_port = self.GetDataNode(data_nodes[0])
         print(f'{data_node_ip}:{data_node_port}')
 
@@ -36,7 +40,7 @@ class Client:
 
 
     def DownloadFile(self, filename: str):
-        data_nodes = self.GetDataNodes(filename)
+        data_nodes = self.GetDataNodesForDownload(filename)
         data_node_ip, data_node_port = self.GetDataNode(data_nodes[0])
         print(f'{data_node_ip}:{data_node_port}')
 

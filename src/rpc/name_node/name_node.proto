@@ -5,7 +5,8 @@ package nameNode;
 service NameNodeService {
   // DataNodes
   rpc Register (RegisterRequest) returns (RegisterResponse);
-  rpc GetDataNodes (DataNodesRequest) returns (DataNodesResponse);
+  rpc GetDataNodesForUpload (DataNodesUploadRequest) returns (DataNodesResponse);
+  rpc GetDataNodesForDownload (DataNodesDownloadRequest) returns (DataNodesResponse);
 
   // Users
   rpc AddUser (AddUserRequest) returns (AddUserResponse);
@@ -15,15 +16,17 @@ service NameNodeService {
 message RegisterRequest {
   string ip = 1;
   string port = 2;
-  int32 storage = 3;
+  double capacity_MB = 3;
 }
 
 message RegisterResponse {
   string id = 1;
 }
 
-message DataNodesRequest {
+message DataNodesUploadRequest {
   string file = 1;
+  double size = 2;
+  string username = 3;
 }
 
 message DataNodesResponse {
@@ -34,7 +37,7 @@ message DataNodeInfo {
   string id = 1;
   string ip = 2;
   string port = 3;
-  int32 storage = 4;
+  double capacity_MB = 4;
 }
 
 message AddUserRequest {
@@ -53,4 +56,9 @@ message ValidateUserRequest {
 
 message ValidateUserResponse {
   string status = 1;
+}
+
+message DataNodesDownloadRequest {
+  string file = 1;
+  string username = 2;
 }

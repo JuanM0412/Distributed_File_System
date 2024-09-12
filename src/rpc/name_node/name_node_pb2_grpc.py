@@ -3,9 +3,9 @@
 import grpc
 import warnings
 
-from . import name_node_pb2 as name__node__pb2
+import name_node_pb2 as name__node__pb2
 
-GRPC_GENERATED_VERSION = '1.66.0'
+GRPC_GENERATED_VERSION = '1.66.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -25,7 +25,7 @@ if _version_not_supported:
     )
 
 
-class nameNodeServiceStub(object):
+class NameNodeServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -35,28 +35,33 @@ class nameNodeServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Register = channel.unary_unary(
-                '/nameNode.nameNodeService/Register',
+                '/nameNode.NameNodeService/Register',
                 request_serializer=name__node__pb2.RegisterRequest.SerializeToString,
                 response_deserializer=name__node__pb2.RegisterResponse.FromString,
                 _registered_method=True)
-        self.GetDataNodes = channel.unary_unary(
-                '/nameNode.nameNodeService/GetDataNodes',
-                request_serializer=name__node__pb2.DataNodesRequest.SerializeToString,
+        self.GetDataNodesForUpload = channel.unary_unary(
+                '/nameNode.NameNodeService/GetDataNodesForUpload',
+                request_serializer=name__node__pb2.DataNodesUploadRequest.SerializeToString,
+                response_deserializer=name__node__pb2.DataNodesResponse.FromString,
+                _registered_method=True)
+        self.GetDataNodesForDownload = channel.unary_unary(
+                '/nameNode.NameNodeService/GetDataNodesForDownload',
+                request_serializer=name__node__pb2.DataNodesDownloadRequest.SerializeToString,
                 response_deserializer=name__node__pb2.DataNodesResponse.FromString,
                 _registered_method=True)
         self.AddUser = channel.unary_unary(
-                '/nameNode.nameNodeService/AddUser',
+                '/nameNode.NameNodeService/AddUser',
                 request_serializer=name__node__pb2.AddUserRequest.SerializeToString,
                 response_deserializer=name__node__pb2.AddUserResponse.FromString,
                 _registered_method=True)
         self.ValidateUser = channel.unary_unary(
-                '/nameNode.nameNodeService/ValidateUser',
+                '/nameNode.NameNodeService/ValidateUser',
                 request_serializer=name__node__pb2.ValidateUserRequest.SerializeToString,
                 response_deserializer=name__node__pb2.ValidateUserResponse.FromString,
                 _registered_method=True)
 
 
-class nameNodeServiceServicer(object):
+class NameNodeServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Register(self, request, context):
@@ -66,7 +71,13 @@ class nameNodeServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetDataNodes(self, request, context):
+    def GetDataNodesForUpload(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetDataNodesForDownload(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -86,16 +97,21 @@ class nameNodeServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_nameNodeServiceServicer_to_server(servicer, server):
+def add_NameNodeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Register': grpc.unary_unary_rpc_method_handler(
                     servicer.Register,
                     request_deserializer=name__node__pb2.RegisterRequest.FromString,
                     response_serializer=name__node__pb2.RegisterResponse.SerializeToString,
             ),
-            'GetDataNodes': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetDataNodes,
-                    request_deserializer=name__node__pb2.DataNodesRequest.FromString,
+            'GetDataNodesForUpload': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDataNodesForUpload,
+                    request_deserializer=name__node__pb2.DataNodesUploadRequest.FromString,
+                    response_serializer=name__node__pb2.DataNodesResponse.SerializeToString,
+            ),
+            'GetDataNodesForDownload': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDataNodesForDownload,
+                    request_deserializer=name__node__pb2.DataNodesDownloadRequest.FromString,
                     response_serializer=name__node__pb2.DataNodesResponse.SerializeToString,
             ),
             'AddUser': grpc.unary_unary_rpc_method_handler(
@@ -110,13 +126,13 @@ def add_nameNodeServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'nameNode.nameNodeService', rpc_method_handlers)
+            'nameNode.NameNodeService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('nameNode.nameNodeService', rpc_method_handlers)
+    server.add_registered_method_handlers('nameNode.NameNodeService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class nameNodeService(object):
+class NameNodeService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -133,7 +149,7 @@ class nameNodeService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/nameNode.nameNodeService/Register',
+            '/nameNode.NameNodeService/Register',
             name__node__pb2.RegisterRequest.SerializeToString,
             name__node__pb2.RegisterResponse.FromString,
             options,
@@ -147,7 +163,7 @@ class nameNodeService(object):
             _registered_method=True)
 
     @staticmethod
-    def GetDataNodes(request,
+    def GetDataNodesForUpload(request,
             target,
             options=(),
             channel_credentials=None,
@@ -160,8 +176,35 @@ class nameNodeService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/nameNode.nameNodeService/GetDataNodes',
-            name__node__pb2.DataNodesRequest.SerializeToString,
+            '/nameNode.NameNodeService/GetDataNodesForUpload',
+            name__node__pb2.DataNodesUploadRequest.SerializeToString,
+            name__node__pb2.DataNodesResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetDataNodesForDownload(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/nameNode.NameNodeService/GetDataNodesForDownload',
+            name__node__pb2.DataNodesDownloadRequest.SerializeToString,
             name__node__pb2.DataNodesResponse.FromString,
             options,
             channel_credentials,
@@ -187,7 +230,7 @@ class nameNodeService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/nameNode.nameNodeService/AddUser',
+            '/nameNode.NameNodeService/AddUser',
             name__node__pb2.AddUserRequest.SerializeToString,
             name__node__pb2.AddUserResponse.FromString,
             options,
@@ -214,7 +257,7 @@ class nameNodeService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/nameNode.nameNodeService/ValidateUser',
+            '/nameNode.NameNodeService/ValidateUser',
             name__node__pb2.ValidateUserRequest.SerializeToString,
             name__node__pb2.ValidateUserResponse.FromString,
             options,
