@@ -1,7 +1,5 @@
 from src.rpc.data_node import data_node_pb2
-
-
-CHUNK_SIZE = 1024 * 1024 # 1MB
+from config import CHUNK_SIZE
 
 
 def GetFileChunks(file_path):

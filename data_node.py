@@ -1,13 +1,10 @@
-import threading, os
+import threading
 from src.data_node.data_node import *
-from dotenv import load_dotenv
-
-
-load_dotenv()
+from config import SERVER_IP, SERVER_PORT, DATA_NODE_IP, DATA_NODE_PORT, DOWNLOADS_DIR
 
 
 if __name__ == '__main__':
-    data_node = DataNode(os.getenv('SERVER_IP'), os.getenv('SERVER_PORT'), os.getenv('DATA_NODE_IP'), os.getenv('DATA_NODE_PORT'), os.getenv('DOWNLOADS_DIR'))
+    data_node = DataNode(SERVER_IP, SERVER_PORT, DATA_NODE_IP, DATA_NODE_PORT, DOWNLOADS_DIR)
     
     data_node_server_thread = threading.Thread(target=data_node.StartServer)
     data_node_server_thread.daemon = True

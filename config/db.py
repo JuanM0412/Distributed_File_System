@@ -1,9 +1,5 @@
 from pymongo import MongoClient
-from dotenv import load_dotenv
-import os
-
-
-load_dotenv()
+from config import MONGO_CLIENT, DB_NAME
 
 
 class Database:
@@ -32,4 +28,4 @@ class Database:
         return self._db.dataNodes
 
 
-database = Database(uri=os.getenv('MONGO_CLIENT'), db_name=os.getenv('DB_NAME'))
+database = Database(uri=MONGO_CLIENT, db_name=DB_NAME)
