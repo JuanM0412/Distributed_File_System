@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package nameNode;
+
+service NameNodeService {
+  // DataNodes
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  rpc GetDataNodes (DataNodesRequest) returns (DataNodesResponse);
+
+  // Users
+  rpc AddUser (AddUserRequest) returns (AddUserResponse);
+  rpc ValidateUser (ValidateUserRequest) returns (ValidateUserResponse);
+}
+
+message RegisterRequest {
+  string ip = 1;
+  string port = 2;
+  int32 storage = 3;
+}
+
+message RegisterResponse {
+  string id = 1;
+}
+
+message DataNodesRequest {
+  string file = 1;
+}
+
+message DataNodesResponse {
+  repeated DataNodeInfo nodes = 1;
+}
+
+message DataNodeInfo {
+  string id = 1;
+  string ip = 2;
+  string port = 3;
+  int32 storage = 4;
+}
+
+message AddUserRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message AddUserResponse {
+  string status = 1;
+}
+
+message ValidateUserRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message ValidateUserResponse {
+  string status = 1;
+}
