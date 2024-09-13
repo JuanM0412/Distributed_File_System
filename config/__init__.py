@@ -17,3 +17,4 @@ DATA_NODE_PORT = os.getenv('DATA_NODE_PORT')
 DOWNLOADS_DIR = os.getenv('DOWNLOADS_DIR')
 
 CHUNK_SIZE = int(os.getenv('CHUNK_SIZE'))
+MB_SIZE = int(os.getenv('MB_SIZE'))
