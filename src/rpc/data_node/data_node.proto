@@ -12,7 +12,7 @@ message Chunk {
 }
 
 message Reply {
-    int32 length = 1;
+    double length = 1;
 }
 
 message GetFileRequest {

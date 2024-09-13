@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import name_node_pb2 as name__node__pb2
+from . import name_node_pb2 as name__node__pb2
 
 GRPC_GENERATED_VERSION = '1.66.1'
 GRPC_VERSION = grpc.__version__
