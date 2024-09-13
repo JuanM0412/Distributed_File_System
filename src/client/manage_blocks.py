@@ -3,7 +3,7 @@ from config import MB_SIZE
 
 def SplitFile(file_path: str, block_size: int = MB_SIZE):
     """
-        SplitFile('/home/juan/Downloads/video.mp4', 128 * 1024 * 1024) this is an example of how to use this function, where 128 * 1024 * 1024 is 128MB.
+        SplitFile('/path/filename', 128 * 1024 * 1024) this is an example of how to use this function, where 128 * 1024 * 1024 is 128MB.
     """
 
     with open(file_path, 'rb') as file:
@@ -30,7 +30,7 @@ def SplitFile(file_path: str, block_size: int = MB_SIZE):
 
 def JoinBlocks(output_file, blocks_list):
     """
-        JoinBlocks('/home/juan/Downloads/archivo_original.mp4', ['/home/juan/Downloads/video_block_1.mp4', '/home/juan/Downloads/video_block_2.mp4', '/home/juan/Downloads/video_block_3.mp4']) this is an example of how to use this function.
+        JoinBlocks('/path/filename', ['/home/juan/Downloads/video_block_1.mp4', '/home/juan/Downloads/video_block_2.mp4', '/home/juan/Downloads/video_block_3.mp4']) this is an example of how to use this function.
     """
     with open(output_file, 'wb') as file:
         for block in blocks_list:
