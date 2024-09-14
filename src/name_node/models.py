@@ -6,7 +6,6 @@ class DataNode(BaseModel):
     Port: str 
     CapacityMB: int
     IsActive: bool
-    Blocks: List[str]
 
 class User(BaseModel):
     Username: str
