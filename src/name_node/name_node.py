@@ -1,7 +1,8 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 import grpc
 from concurrent import futures
-from .models import DataNode, User
+from src.models.datanode import DataNode
+from src.models.user import  User
 from config.db import database
 
 
