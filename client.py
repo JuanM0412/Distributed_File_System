@@ -1,4 +1,4 @@
-from src.client.client import *
+from src.client.client import Client
 from config import CLIENT_IP, CLIENT_PORT, SERVER_IP, SERVER_PORT
 
 

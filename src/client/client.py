@@ -1,6 +1,6 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
-from utils.utils import *
+from utils.utils import GetFileSize, GetFileChunks, SaveChunksToFile
 import grpc
 
 
