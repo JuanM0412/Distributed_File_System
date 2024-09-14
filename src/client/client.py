@@ -1,6 +1,6 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
-from src.utils import *
+from utils.utils import *
 import grpc
 
 
@@ -8,23 +8,30 @@ class Client:
     def __init__(self, ip: str, port: int, server_ip: str, server_port: int):
         self.ip = ip
         self.port = port
+        self.username = None
 
         print(f'Connecting to {server_ip}:{server_port}')
         self.server_channel = grpc.insecure_channel(f'{server_ip}:{server_port}')
-        self.server_stub = name_node_pb2_grpc.nameNodeServiceStub(self.server_channel)
+        self.server_stub = name_node_pb2_grpc.NameNodeServiceStub(self.server_channel)
 
     
-    def GetDataNodes(self, filename: str):
-        response = self.server_stub.GetDataNodes(name_node_pb2.DataNodesRequest(file=filename))
+    def GetDataNodesForUpload(self, filename: str, file_size: int):
+        response = self.server_stub.GetDataNodesForUpload(name_node_pb2.DataNodesUploadRequest(file=filename, size=file_size, username=self.username))
         return response.nodes
     
 
+    def GetDataNodesForDownload(self, filename: str):
+        response = self.server_stub.GetDataNodesForDownload(name_node_pb2.DataNodesDownloadRequest(file=filename, username=self.username))
+        return response.nodes
+    
+    
     def GetDataNode(self, data_node):
         return data_node.ip, data_node.port
 
 
     def UploadFile(self, filename: str):
-        data_nodes = self.GetDataNodes(filename)
+        file_size = GetFileSize(filename)
+        data_nodes = self.GetDataNodesForUpload(filename, file_size)
         data_node_ip, data_node_port = self.GetDataNode(data_nodes[0])
         print(f'{data_node_ip}:{data_node_port}')
 
@@ -36,7 +43,7 @@ class Client:
 
 
     def DownloadFile(self, filename: str):
-        data_nodes = self.GetDataNodes(filename)
+        data_nodes = self.GetDataNodesForDownload(filename)
         data_node_ip, data_node_port = self.GetDataNode(data_nodes[0])
         print(f'{data_node_ip}:{data_node_port}')
 
@@ -50,4 +57,5 @@ class Client:
     
     def Register(self, username: str, password: str):
         response = self.server_stub.AddUser(name_node_pb2.AddUserRequest(username=username, password=password))
+        self.username = username
         print(f'Response: {response.status}')

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\"\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t2v\n\x08\x44\x61taNode\x12\x30\n\x08SendFile\x12\x10.data_node.Chunk\x1a\x10.data_node.Reply(\x01\x12\x38\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x10.data_node.Chunk0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x01\"\"\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t2v\n\x08\x44\x61taNode\x12\x30\n\x08SendFile\x12\x10.data_node.Chunk\x1a\x10.data_node.Reply(\x01\x12\x38\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x10.data_node.Chunk0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)

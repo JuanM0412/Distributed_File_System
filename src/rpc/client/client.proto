@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package client;
-
-service Client {
-    rpc receive_file(stream Chunk) returns ();
-}

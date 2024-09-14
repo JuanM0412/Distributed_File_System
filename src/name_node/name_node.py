@@ -5,7 +5,7 @@ from .models import DataNode, User
 from config.db import database
 
 
-class Server(name_node_pb2_grpc.nameNodeServiceServicer):
+class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     def __init__(self, ip: str, port: int):
         self.ip = ip
         self.port = port
@@ -15,10 +15,10 @@ class Server(name_node_pb2_grpc.nameNodeServiceServicer):
         # Extract the info about the dataNode.
         ip = request.ip
         port = request.port
-        storage = request.storage
+        capacity_MB = request.capacity_MB
 
         # Instance of the model
-        data_node_info = DataNode(ip=ip, port=port, storage=storage)
+        data_node_info = DataNode(Ip=ip, Port=port, CapacityMB=capacity_MB, IsActive=True, Blocks=[])
         print('data:', data_node_info.model_dump())
 
         # Add the dataNode in the DB
@@ -28,13 +28,27 @@ class Server(name_node_pb2_grpc.nameNodeServiceServicer):
         return name_node_pb2.RegisterResponse(id=str(data_node.inserted_id))
     
 
-    def GetDataNodes(self, request, context):
+    def GetDataNodesForUpload(self, request, context):
         file = request.file
         data_nodes = list(database.dataNodes.find())
 
         response = name_node_pb2.DataNodesResponse()
         for data_node in data_nodes:
-            data_node_info = name_node_pb2.DataNodeInfo(id=str(data_node['_id']), ip=str(data_node['ip']), port=str(data_node['port']), storage=data_node['storage'])
+            data_node_info = name_node_pb2.DataNodeInfo(id=str(data_node['_id']), ip=str(data_node['ip']), port=str(data_node['port']), capacity_MB=data_node['storage'])
+            response.nodes.append(data_node_info)
+            #This break will be in this for while we realize how choose in which datanodes we are going to save a file. For the same reason I asked for the filename. In this way, we are going to add the files just in the first data_node, then it will be different
+            break 
+        
+        return response
+    
+    def GetDataNodesForDownload(self, request, context):
+        file = request.file
+        username = request.username
+        data_nodes = list(database.dataNodes.find())
+
+        response = name_node_pb2.DataNodesResponse()
+        for data_node in data_nodes:
+            data_node_info = name_node_pb2.DataNodeInfo(id=str(data_node['_id']), ip=str(data_node['ip']), port=str(data_node['port']), capacity_MB=data_node['storage'])
             response.nodes.append(data_node_info)
             #This break will be in this for while we realize how choose in which datanodes we are going to save a file. For the same reason I asked for the filename. In this way, we are going to add the files just in the first data_node, then it will be different
             break 
@@ -71,15 +85,15 @@ class Server(name_node_pb2_grpc.nameNodeServiceServicer):
         user = database.users.find_one({'username': username, 'password': password})
 
         if user:
-            return name_node_pb2.AddUserResponse(status='User logged successfully')
+            return name_node_pb2.ValidateUserResponse(status='User logged successfully')
         else:
-            return name_node_pb2.AddUserResponse(status='Invalid username or password')
+            return name_node_pb2.ValidateUserResponse(status='Invalid username or password')
 
 
 def StartServer(ip: str, port: int):
     print('Server is running')
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    name_node_pb2_grpc.add_nameNodeServiceServicer_to_server(Server(ip=ip, port=port), server)
+    name_node_pb2_grpc.add_NameNodeServiceServicer_to_server(Server(ip=ip, port=port), server)
     server.add_insecure_port(f'{ip}:{port}')
     server.start()
     server.wait_for_termination()

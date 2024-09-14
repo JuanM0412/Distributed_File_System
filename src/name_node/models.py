@@ -1,12 +1,14 @@
 from pydantic import BaseModel
-
+from typing import List
 
 class DataNode(BaseModel):
-    ip: str
-    port: int 
-    storage: int
-    
+    Ip: str
+    Port: str 
+    CapacityMB: int
+    IsActive: bool
+    Blocks: List[str]
 
 class User(BaseModel):
-    username: str
-    password: str
+    Username: str
+    Password: str
+

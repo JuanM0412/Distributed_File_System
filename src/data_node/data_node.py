@@ -1,6 +1,6 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
-from src.utils import *
+from utils.utils import GetFileSize, GetFileChunks, SaveChunksToFile
 import grpc, os
 from concurrent import futures
 
@@ -15,13 +15,13 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         self.id = None
 
         self.name_node_channel = grpc.insecure_channel(f'{server_ip}:{server_port}')
-        self.name_node_stub = name_node_pb2_grpc.nameNodeServiceStub(self.name_node_channel)
+        self.name_node_stub = name_node_pb2_grpc.NameNodeServiceStub(self.name_node_channel)
 
 
     def SendFile(self, request_iterator, context):
         filename = os.path.join(self.dir, 'test1.txt')
         SaveChunksToFile(request_iterator, filename)
-        file_size = os.path.getsize(filename)
+        file_size = GetFileSize(filename)
         return data_node_pb2.Reply(length=file_size)
     
 
@@ -43,6 +43,6 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
 
 
     def Register(self):
-        response = self.name_node_stub.Register(name_node_pb2.RegisterRequest(ip=self.ip, port=str(self.port), storage=self.capacity))
+        response = self.name_node_stub.Register(name_node_pb2.RegisterRequest(ip=self.ip, port=str(self.port), capacity_MB=float(self.capacity)))
         self.id = response.id
         print(f'Registered with id: {self.id}')
