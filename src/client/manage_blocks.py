@@ -1,7 +1,8 @@
-from config import MB_SIZE
+from config import SIZE_BLOCK
+from utils.utils import BytesConverter
 
-
-def SplitFile(file_path: str, block_size: int = MB_SIZE):
+def SplitFile(file_path: str):
+    block_size = BytesConverter(SIZE_BLOCK)
     with open(file_path, 'rb') as file:
         block_number = 1
         
