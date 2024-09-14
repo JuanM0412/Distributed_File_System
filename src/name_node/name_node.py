@@ -1,9 +1,10 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
-import grpc
+import grpc, json
 from concurrent import futures
 from src.models.datanode import DataNode
 from src.models.user import  User
 from config.db import database
+from src.tree import Tree
 
 
 class Server(name_node_pb2_grpc.NameNodeServiceServicer):
@@ -64,12 +65,12 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
 
         print('AddUser method')
 
-        check_unique_name = database.users.find_one({'username': username})
+        check_unique_name = database.users.find_one({'Username': username})
         if check_unique_name:
             return name_node_pb2.AddUserResponse(status='Name unavailable')
         
         # Instance of the model
-        user_info = User(username=username, password=password)
+        user_info = User(Username=username, Password=password)
         print('user:', user_info.model_dump())
 
         # Add the dataNode in the DB
