@@ -4,7 +4,6 @@ from concurrent import futures
 from src.models.datanode import DataNode
 from src.models.user import  User
 from config.db import database
-from src.tree import Tree
 
 
 class Server(name_node_pb2_grpc.NameNodeServiceServicer):

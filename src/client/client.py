@@ -2,7 +2,8 @@ from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
 from utils.utils import GetFileSize, GetFileChunks, SaveChunksToFile
 from config.db import database
-import grpc
+import grpc ,os
+from src.models.directory_item import DirectoryItem
 
 
 class Client:
@@ -202,3 +203,41 @@ class Client:
         for item in dir_to_list['Contents']:
             item_type = "DIR" if item['IsDir'] else "FILE"
             print(f"{item_type:<4} {item['Name']}")
+    
+    def Put(self, path: str, file_name: str, file_size: int = 0):
+        if self.username is None:
+            print("Username is not set. Please register first")
+            return
+
+        user_data = self.users_collection.find_one({"Username": self.username})
+        if not user_data:
+            print("User not found")
+            return
+
+        directories = user_data['Directories']
+        current_dir = self.FindDirectory(directories, path)
+
+        if current_dir is None:
+            print(f"Directory {path} not found")
+            return
+
+        # Verifica si el archivo ya existe en el directorio
+        if any(item['Name'] == file_name and not item['IsDir'] for item in current_dir['Contents']):
+            print(f"File {file_name} already exists in {path}")
+            return
+
+        # Añade el archivo al directorio actual
+        current_dir['Contents'].append({
+            "Name": file_name,
+            "IsDir": False,
+            "Contents": None,
+            "FileSize": file_size
+        })
+
+        # Actualiza la colección de usuarios con el nuevo archivo en el directorio
+        self.users_collection.update_one(
+            {"Username": self.username},
+            {"$set": {"Directories": directories}}
+        )
+
+        print(f"File {file_name} added to {path} successfully")

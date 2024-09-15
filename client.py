@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     # SplitFile("/home/sebas/Downloads/test_tel.mp4")
 
-    JoinBlocks("join_test.mp4", ["/home/sebas/Downloads/test_tel_block_1.mp4", "/home/sebas/Downloads/test_tel_block_2.mp4", "/home/sebas/Downloads/test_tel_block_3.mp4"])
+    #JoinBlocks("join_test.mp4", ["/home/sebas/Downloads/test_tel_block_1.mp4", "/home/sebas/Downloads/test_tel_block_2.mp4", "/home/sebas/Downloads/test_tel_block_3.mp4"])
 
     client = Client(CLIENT_IP, CLIENT_PORT, SERVER_IP, SERVER_PORT)
     print('Calling Register method...')
@@ -19,9 +19,13 @@ if __name__ == '__main__':
     client.MakeDirectory("/test_dir/inside_test")
     client.MakeDirectory("/test_dir/inside_test/inside_test2")
 
-    client.ListDirectory("/test_dir")
+    client.Put("/test_dir/inside_test", "file1.txt", 1234)
+    client.Put("/test_dir/inside_test/inside_test2", "file2.txt", 1234)
+    client.Put("/", "file3.txt", 1234)
 
-    client.RemoveDirectory("/test_dir", force=True)
+    #client.ListDirectory("/test_dir")
+
+    #client.RemoveDirectory("/test_dir", force=True)
 
     #client.UploadFile('test.txt')
     #client.DownloadFile('test1.txt')
