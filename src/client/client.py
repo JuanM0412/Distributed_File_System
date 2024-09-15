@@ -2,8 +2,8 @@ from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
 from utils.utils import GetFileSize, GetFileChunks, SaveChunksToFile
 from config.db import database
-import grpc ,os
-from src.models.directory_item import DirectoryItem
+import grpc 
+from src.file_manager.file_manager import FileManager
 
 
 class Client:
@@ -13,6 +13,8 @@ class Client:
         self.username = None
         
         self.users_collection = database.users
+
+        self.file_manager = None
 
         print(f'Connecting to {server_ip}:{server_port}')
         self.server_channel = grpc.insecure_channel(f'{server_ip}:{server_port}')
@@ -63,6 +65,8 @@ class Client:
         response = self.server_stub.AddUser(name_node_pb2.AddUserRequest(username=username, password=password))
         self.username = username
 
+        self.file_manager = FileManager(self.username, self.users_collection)
+
         if response.status == "User created successfully" : 
             self.users_collection.update_one(
                 {"Username" : self.username},
@@ -77,167 +81,28 @@ class Client:
         print(f'Response: {response.status}')
     
     def MakeDirectory(self, path: str):
-        if self.username is None:
-            print("Username is not set. Please register first")
-            return
+        if self.file_manager:
+            self.file_manager.MakeDirectory(path)
 
-        user_data = self.users_collection.find_one({"Username": self.username})
-        if not user_data:
-            print("User not found")
-            return
-
-        directories = user_data['Directories']
-        parts = path.strip('/').split('/')
-        current_dir = self.FindDirectory(directories, "/")
-
-        if current_dir is None:
-            print("Root directory not found")
-            return
-
-        for i, part in enumerate(parts):
-            if i == len(parts) - 1:
-                if not any(item['Name'] == part and item['IsDir'] for item in current_dir['Contents']):
-                    current_dir['Contents'].append({
-                        "Name": part,
-                        "IsDir": True,
-                        "Contents": []
-                    })
-                    print(f"Directory {path} created successfully.")
-                else:
-                    print(f"Directory {path} already exists.")
-                break
-            else:
-                next_dir = next((item for item in current_dir['Contents'] if item['Name'] == part and item['IsDir']), None)
-                if next_dir is None:
-                    next_dir = {
-                        "Name": part,
-                        "IsDir": True,
-                        "Contents": []
-                    }
-                    current_dir['Contents'].append(next_dir)
-                current_dir = next_dir
-
-        self.users_collection.update_one(
-            {"Username": self.username},
-            {"$set": {"Directories": directories}}
-        )
-
-    def FindDirectory(self, directories, path):
-        if path == '/':
-            return next((item for item in directories if item["Name"] == "/"), None)
-
-        parts = path.strip('/').split('/')
-        current_dir = next((item for item in directories if item["Name"] == "/"), None)
-
-        for part in parts:
-            if current_dir is None:
-                return None
-            current_dir = next((item for item in current_dir["Contents"] if item["IsDir"] and item["Name"] == part), None)
-
-        return current_dir
+    def Put(self, path: str, file_name: str, file_size: int = 0):
+        if self.file_manager:
+            self.file_manager.Put(path, file_name, file_size)
 
     def RemoveDirectory(self, path: str, force: bool = False):
-        if self.username is None:
-            print("Username is not set. Please register first")
-            return
-
-        user_data = self.users_collection.find_one({"Username": self.username})
-        if not user_data:
-            print("User not found")
-            return
-
-        directories = user_data['Directories']
-        parts = path.strip('/').split('/')
-        
-        if len(parts) == 1 and parts[0] == '':
-            print("Cannot remove root directory")
-            return
-
-        parent_path = '/' + '/'.join(parts[:-1])
-        dir_to_remove = parts[-1]
-
-        parent_dir = self.FindDirectory(directories, parent_path)
-        if parent_dir is None:
-            print(f"Parent directory {parent_path} not found")
-            return
-
-        dir_index = next((i for i, item in enumerate(parent_dir['Contents']) 
-                          if item['Name'] == dir_to_remove and item['IsDir']), None)
-        
-        if dir_index is None:
-            print(f"Directory {path} not found")
-            return
-
-        dir_to_remove = parent_dir['Contents'][dir_index]
-
-        if not force and len(dir_to_remove['Contents']) > 0:
-            print(f"Directory {path} is not empty. Use force=True to remove non-empty directories")
-            return
-
-        del parent_dir['Contents'][dir_index]
-        print(f"Directory {path} removed successfully")
-
-        self.users_collection.update_one(
-            {"Username": self.username},
-            {"$set": {"Directories": directories}}
-        )
+        if self.file_manager:
+            self.file_manager.RemoveDirectory(path, force)
 
     def ListDirectory(self, path: str):
-        if self.username is None:
-            print("Username is not set. Please register first")
-            return
+        if self.file_manager:
+            self.file_manager.ListDirectory(path)
 
-        user_data = self.users_collection.find_one({"Username": self.username})
-        if not user_data:
-            print("User not found")
-            return
+    def Rm(self, path: str, file_name: str):
+        if self.file_manager:
+            self.file_manager.Rm(path, file_name)
 
-        directories = user_data['Directories']
-        dir_to_list = self.FindDirectory(directories, path)
+    def FindDirectory(self, directories, path):
+        if self.file_manager:
+            self.file_manager.FindDirectory(directories, path)
 
-        if dir_to_list is None:
-            print(f"Directory {path} not found")
-            return
-
-        print(f"Contents of {path}:")
-        for item in dir_to_list['Contents']:
-            item_type = "DIR" if item['IsDir'] else "FILE"
-            print(f"{item_type:<4} {item['Name']}")
-    
-    def Put(self, path: str, file_name: str, file_size: int = 0):
-        if self.username is None:
-            print("Username is not set. Please register first")
-            return
-
-        user_data = self.users_collection.find_one({"Username": self.username})
-        if not user_data:
-            print("User not found")
-            return
-
-        directories = user_data['Directories']
-        current_dir = self.FindDirectory(directories, path)
-
-        if current_dir is None:
-            print(f"Directory {path} not found")
-            return
-
-        # Verifica si el archivo ya existe en el directorio
-        if any(item['Name'] == file_name and not item['IsDir'] for item in current_dir['Contents']):
-            print(f"File {file_name} already exists in {path}")
-            return
-
-        # Añade el archivo al directorio actual
-        current_dir['Contents'].append({
-            "Name": file_name,
-            "IsDir": False,
-            "Contents": None,
-            "FileSize": file_size
-        })
-
-        # Actualiza la colección de usuarios con el nuevo archivo en el directorio
-        self.users_collection.update_one(
-            {"Username": self.username},
-            {"$set": {"Directories": directories}}
-        )
-
-        print(f"File {file_name} added to {path} successfully")
+    def directory_exists(self, path):
+        return self.FindDirectory(self.users_collection.find_one({"Username": self.username})['Directories'], path)
