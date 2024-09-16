@@ -23,7 +23,8 @@ class FileManager:
 
         for i, part in enumerate(parts):
             if i == len(parts) - 1:
-                if not any(item['Name'] == part and item['IsDir'] for item in current_dir['Contents']):
+                if not any(item['Name'] == part and item['IsDir']
+                           for item in current_dir['Contents']):
                     current_dir['Contents'].append({
                         "Name": part,
                         "IsDir": True,
@@ -34,7 +35,9 @@ class FileManager:
                     print(f"Directory {path} already exists.")
                 break
             else:
-                next_dir = next((item for item in current_dir['Contents'] if item['Name'] == part and item['IsDir']), None)
+                next_dir = next(
+                    (item for item in current_dir['Contents'] if item['Name'] == part and item['IsDir']),
+                    None)
                 if next_dir is None:
                     next_dir = {
                         "Name": part,
@@ -51,15 +54,19 @@ class FileManager:
 
     def FindDirectory(self, directories, path):
         if path == '/':
-            return next((item for item in directories if item["Name"] == "/"), None)
+            return next(
+                (item for item in directories if item["Name"] == "/"), None)
 
         parts = path.strip('/').split('/')
-        current_dir = next((item for item in directories if item["Name"] == "/"), None)
+        current_dir = next(
+            (item for item in directories if item["Name"] == "/"), None)
 
         for part in parts:
             if current_dir is None:
                 return None
-            current_dir = next((item for item in current_dir["Contents"] if item["IsDir"] and item["Name"] == part), None)
+            current_dir = next(
+                (item for item in current_dir["Contents"] if item["IsDir"] and item["Name"] == part),
+                None)
 
         return current_dir
 
@@ -75,7 +82,7 @@ class FileManager:
 
         directories = user_data['Directories']
         parts = path.strip('/').split('/')
-        
+
         if len(parts) == 1 and parts[0] == '':
             print("Cannot remove root directory")
             return
@@ -88,9 +95,12 @@ class FileManager:
             print(f"Parent directory {parent_path} not found")
             return
 
-        dir_index = next((i for i, item in enumerate(parent_dir['Contents']) 
-                          if item['Name'] == dir_to_remove and item['IsDir']), None)
-        
+        dir_index = next(
+            (i for i,
+             item in enumerate(
+                 parent_dir['Contents']) if item['Name'] == dir_to_remove and item['IsDir']),
+            None)
+
         if dir_index is None:
             print(f"Directory {path} not found")
             return
@@ -98,7 +108,8 @@ class FileManager:
         dir_to_remove = parent_dir['Contents'][dir_index]
 
         if not force and len(dir_to_remove['Contents']) > 0:
-            print(f"Directory {path} is not empty. Use force=True to remove non-empty directories")
+            print(
+                f"Directory {path} is not empty. Use force=True to remove non-empty directories")
             return
 
         del parent_dir['Contents'][dir_index]
@@ -128,9 +139,9 @@ class FileManager:
 
         print(f"Contents of {path}:")
 
-        BLUE = '\033[94m'  
-        WHITE = '\033[97m' 
-        RESET = '\033[0m'   
+        BLUE = '\033[94m'
+        WHITE = '\033[97m'
+        RESET = '\033[0m'
 
         for item in dir_to_list['Contents']:
             if item['IsDir']:
@@ -138,7 +149,6 @@ class FileManager:
             else:
                 print(f"{WHITE}{item['Name']}{RESET}")
 
-    
     def Put(self, path: str, file_name: str, file_size: int = 0):
         if self.username is None:
             print("Username is not set. Please register first")
@@ -156,7 +166,8 @@ class FileManager:
             print(f"Directory {path} not found")
             return
 
-        if any(item['Name'] == file_name and not item['IsDir'] for item in current_dir['Contents']):
+        if any(item['Name'] == file_name and not item['IsDir']
+               for item in current_dir['Contents']):
             print(f"File {file_name} already exists in {path}")
             return
 
@@ -173,7 +184,7 @@ class FileManager:
         )
 
         print(f"File {file_name} added to {path} successfully")
-    
+
     def Rm(self, path: str, file_name: str):
         if self.username is None:
             print("Username is not set. Please register first")
@@ -191,8 +202,11 @@ class FileManager:
             print(f"Directory {path} not found")
             return
 
-        file_index = next((i for i, item in enumerate(current_dir['Contents']) 
-                           if item['Name'] == file_name and not item['IsDir']), None)
+        file_index = next(
+            (i for i,
+             item in enumerate(
+                 current_dir['Contents']) if item['Name'] == file_name and not item['IsDir']),
+            None)
 
         if file_index is None:
             print(f"File {file_name} not found in {path}")

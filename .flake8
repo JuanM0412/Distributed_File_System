@@ -1,0 +1,6 @@
+[flake8]
+ignore = E501, E722, W503
+exclude =
+    __pycache__,
+    venv/,
+    .git,
