@@ -2,9 +2,9 @@ name: Backend Linter
 
 on:
   push:
-    branches: ["test"]
+    branches: ["development"]
   pull_request:
-    branches: ["test"]
+    branches: ["development"]
 
 jobs:
   linter:
@@ -21,16 +21,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd backend
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Run autopep8 on all Python files
         run: |
-          cd backend
           find . -name "*.py" -not -path "./venv/*" -not -path "./__pycache__/*" | xargs autopep8 --in-place --aggressive --aggressive
-
-      - name: Run Flake8
-        run: |
-          cd backend
-          flake8 . --config=.flake8

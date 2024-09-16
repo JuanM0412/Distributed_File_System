@@ -20,7 +20,8 @@ def SaveChunksToFile(chunks, filename):
 
 def GetFileSize(file_path):
     size = os.path.getsize(file_path)
-    return float(size / MB_IN_BYTES) 
+    return float(size / MB_IN_BYTES)
+
 
 def BytesConverter(block_size):
     return block_size * MB_IN_BYTES
