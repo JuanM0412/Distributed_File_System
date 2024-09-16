@@ -127,9 +127,17 @@ class FileManager:
             return
 
         print(f"Contents of {path}:")
+
+        BLUE = '\033[94m'  
+        WHITE = '\033[97m' 
+        RESET = '\033[0m'   
+
         for item in dir_to_list['Contents']:
-            item_type = "DIR" if item['IsDir'] else "FILE"
-            print(f"{item_type:<4} {item['Name']}")
+            if item['IsDir']:
+                print(f"{BLUE}{item['Name']}/{RESET}")
+            else:
+                print(f"{WHITE}{item['Name']}{RESET}")
+
     
     def Put(self, path: str, file_name: str, file_size: int = 0):
         if self.username is None:

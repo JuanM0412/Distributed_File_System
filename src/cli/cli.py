@@ -35,7 +35,6 @@ class CLI:
                     print(f"Command '{cmd}' not found.")
     
     def cd(self, args):
-        """Cambiar de directorio"""
         if len(args) != 1:
             print("Usage: cd <directory>")
             return
@@ -43,24 +42,21 @@ class CLI:
         new_dir = args[0]
 
         if new_dir == "..":
-            # Subir un nivel en el árbol de directorios
             if self.current_path != "/":
-                self.current_path = os.path.dirname(self.current_path)
+                self.current_path = "/".join(self.current_path.rstrip('/').split('/')[:-1]) or "/"
             return
 
-        # Construir nueva ruta
         if new_dir.startswith('/'):
             new_path = new_dir
         else:
-            new_path = os.path.join(self.current_path, new_dir)
+            new_path = os.path.join(self.current_path, new_dir).replace('//', '/')
 
-        # Verificar si el directorio existe
-        if self.client.directory_exists(new_path):
-            self.current_path = new_path
-            print(f"Directory changed to '{self.current_path}'")
+        if not self.client.directory_exists(new_path):
+            print(f"Directory {new_path} does not exist.")
         else:
-            print(f"Directory '{new_path}' not found.")
+            self.current_path = new_path
 
+            
     def ls(self, args):
         """Listar los archivos y directorios"""
         path = self.current_path if len(args) == 0 else args[0]
@@ -96,11 +92,4 @@ class CLI:
         self.client.Put(self.current_path, file_name, os.path.getsize(file_name))
 
 
-if __name__ == "__main__":
-    # Inicializa el cliente
-    client = Client(ip="localhost", port=8000, server_ip="localhost", server_port=9000)
-    client.Register("user", "password")  # Registra un usuario
-    
-    # Iniciar el CLI
-    cli = CLI(client)
-    cli.start()
+
