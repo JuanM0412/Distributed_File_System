@@ -31,9 +31,14 @@ class CLI:
                     self.rm(args)
                 elif cmd == 'put':
                     self.put(args)
+                elif cmd == 'clear':
+                    self.clear()
                 else:
                     print(f"Command '{cmd}' not found.")
 
+    def clear(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
+    
     def cd(self, args):
         if len(args) != 1:
             print("Usage: cd <directory>")
