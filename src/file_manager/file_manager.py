@@ -53,20 +53,26 @@ class FileManager:
         )
 
     def FindDirectory(self, directories, path):
+        print("FindDirecotry", path)
         if path == '/':
             return next(
                 (item for item in directories if item["Name"] == "/"), None)
 
         parts = path.strip('/').split('/')
+        print("Parts : ", parts)
         current_dir = next(
             (item for item in directories if item["Name"] == "/"), None)
 
+        print("Current dir : ", current_dir)
         for part in parts:
+            print("Current dir : ", current_dir)
             if current_dir is None:
                 return None
             current_dir = next(
                 (item for item in current_dir["Contents"] if item["IsDir"] and item["Name"] == part),
                 None)
+            
+        print("Current dir : ", current_dir)
 
         return current_dir
 

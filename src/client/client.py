@@ -108,7 +108,7 @@ class Client:
 
     def FindDirectory(self, directories, path):
         if self.file_manager:
-            self.file_manager.FindDirectory(directories, path)
+            return self.file_manager.FindDirectory(directories, path)
 
     def directory_exists(self, path):
         print(f"Checking if directory exists: {path}")
@@ -116,6 +116,8 @@ class Client:
         if not user_data:
             print("User not found")
             return False
+
+        print("Direcories : ", user_data["Directories"])
         result = self.FindDirectory(user_data['Directories'], path)
         print(f"FindDirectory result: {result}")
         return result is not None
