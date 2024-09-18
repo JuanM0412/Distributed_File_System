@@ -2,7 +2,6 @@ from src.rpc.data_node import data_node_pb2
 from config import MB_IN_BYTES
 import os
 
-
 def GetFileChunks(file_path):
     with open(file_path, 'rb') as f:
         while True:
@@ -25,3 +24,4 @@ def GetFileSize(file_path):
 
 def BytesConverter(block_size):
     return block_size * MB_IN_BYTES
+

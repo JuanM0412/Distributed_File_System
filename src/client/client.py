@@ -38,17 +38,37 @@ class Client:
         return data_node.ip, data_node.port
 
     def UploadFile(self, filename: str):
-        file_size = GetFileSize(filename)
-        data_nodes = self.GetDataNodesForUpload(filename, file_size)
-        data_node_ip, data_node_port = self.GetDataNode(data_nodes[0])
-        print(f'{data_node_ip}:{data_node_port}')
+        file_size = int(GetFileSize(filename))
+        chunks = list(GetFileChunks(filename))
+        total_chunks = len(chunks)
 
-        chunks = GetFileChunks(filename)
-        data_node_channel = grpc.insecure_channel(
-            f'{data_node_ip}:{data_node_port}')
-        data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
-        response = data_node_stub.SendFile(chunks.__iter__())
-        print(f'File uploaded, server reported length: {response.length}')
+        print(f'Uploading file {filename} of size {file_size} bytes')
+
+        for i, chunk in enumerate(chunks):
+            print(chunk)
+            chunk_size = len(chunk.data)
+            data_nodes = self.GetDataNodesForUpload(filename, chunk_size, i)
+
+            if not data_nodes:
+                raise Exception(f"No available nodes to store chunk {i}")
+
+            for node in data_nodes:
+                data_node_ip, data_node_port = self.GetDataNode(node)
+                print(f'Uploading chunk {i} to {data_node_ip}:{data_node_port}')
+
+                data_node_channel = grpc.insecure_channel(f'{data_node_ip}:{data_node_port}')
+                data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
+
+                response = data_node_stub.SendFile(
+                    data_node_pb2.FileChunk(
+                        chunk_data=chunk,
+                        filename=filename,
+                        chunk_number=i,
+                        total_chunks=total_chunks
+                    )
+                )
+                print(f'Chunk {i} uploaded, server reported length: {response.length}')
+
 
     def DownloadFile(self, filename: str):
         data_nodes = self.GetDataNodesForDownload(filename)

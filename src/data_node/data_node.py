@@ -27,12 +27,13 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         self.name_node_stub = name_node_pb2_grpc.NameNodeServiceStub(
             self.name_node_channel)
 
-    def SendFile(self, request_iterator, context):
-        filename = os.path.join(self.dir, 'test1.txt')
-        SaveChunksToFile(request_iterator, filename)
-        file_size = GetFileSize(filename)
+    def SendFile(self, request, context):
+        filename = os.path.join(self.dir, f"{request.filename}_chunk_{request.chunk_number}")
+        with open(filename, 'wb') as f:
+            f.write(request.chunk_data)
+        file_size = os.path.getsize(filename)
         return data_node_pb2.Reply(length=file_size)
-
+    
     def GetFile(self, request, context):
         filename = os.path.join(self.dir, request.filename)
         if not os.path.exists(filename):
