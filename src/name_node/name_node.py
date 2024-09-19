@@ -41,8 +41,10 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
         response = name_node_pb2.DataNodesResponse()
 
         selected_nodes = set()
+        print("HOLA")
         while len(selected_nodes) < 3:
-            selected_node = self.randomWeight(chunk_size, selected_nodes) 
+            print('selected_nodes:', selected_nodes)
+            selected_node = self.RandomWeight(chunk_size, selected_nodes) 
             if selected_node:
                 selected_nodes.add(selected_node)
             else:
@@ -60,7 +62,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
 
         return response
 
-    def randomWeight(self, chunk_size, excluded_nodes):
+    def RandomWeight(self, chunk_size, excluded_nodes):
         data_nodes = list(database.dataNodes.find())
         
         filtered_data_nodes = [

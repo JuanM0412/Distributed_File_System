@@ -43,16 +43,20 @@ class Client:
         total_chunks = len(chunks)
 
         print(f'Uploading file {filename} of size {file_size} bytes')
-
+        print(f'Total chunks: {total_chunks}')
         for i, chunk in enumerate(chunks):
+            print(f'Uploading chunk {i}')
+            # Assuming chunk.data is the actual byte content of the chunk
             print(chunk)
             chunk_size = len(chunk.data)
             data_nodes = self.GetDataNodesForUpload(filename, chunk_size, i)
+            print(data_nodes)
 
             if not data_nodes:
                 raise Exception(f"No available nodes to store chunk {i}")
-
+            print(f'Uploading chunk {i} to {data_nodes[0].ip}:{data_nodes[0].port}')
             for node in data_nodes:
+                print(node)
                 data_node_ip, data_node_port = self.GetDataNode(node)
                 print(f'Uploading chunk {i} to {data_node_ip}:{data_node_port}')
 
@@ -61,13 +65,14 @@ class Client:
 
                 response = data_node_stub.SendFile(
                     data_node_pb2.FileChunk(
-                        chunk_data=chunk,
+                        chunk_data=chunk.data,
                         filename=filename,
                         chunk_number=i,
                         total_chunks=total_chunks
                     )
                 )
                 print(f'Chunk {i} uploaded, server reported length: {response.length}')
+
 
 
     def DownloadFile(self, filename: str):
