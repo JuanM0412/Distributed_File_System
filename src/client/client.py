@@ -22,10 +22,15 @@ class Client:
         self.server_stub = name_node_pb2_grpc.NameNodeServiceStub(
             self.server_channel)
 
-    def GetDataNodesForUpload(self, filename: str, file_size: int):
-        response = self.server_stub.GetDataNodesForUpload(
-            name_node_pb2.DataNodesUploadRequest(
-                file=filename, size=file_size, username=self.username))
+    
+    def GetDataNodesForUpload(self, filename: str, chunk_size: int, chunk_number: int):
+        request = name_node_pb2.DataNodesUploadRequest(
+            file=filename,
+            size=chunk_size,
+            username=self.username,
+            chunk_number=chunk_number
+        )
+        response = self.server_stub.GetDataNodesForUpload(request)
         return response.nodes
 
     def GetDataNodesForDownload(self, filename: str):
@@ -38,42 +43,42 @@ class Client:
         return data_node.ip, data_node.port
 
     def UploadFile(self, filename: str):
+        print(f'Uploading file {filename}')
         file_size = int(GetFileSize(filename))
+        print(f'File size: {file_size}')
+        
         chunks = list(GetFileChunks(filename))
         total_chunks = len(chunks)
-
+        
         print(f'Uploading file {filename} of size {file_size} bytes')
         print(f'Total chunks: {total_chunks}')
+        
         for i, chunk in enumerate(chunks):
             print(f'Uploading chunk {i}')
-            # Assuming chunk.data is the actual byte content of the chunk
-            print(chunk)
-            chunk_size = len(chunk.data)
+            print(f'Chunk size: {len(chunk.buffer)}')
+            
+            chunk_size = len(chunk.buffer)
             data_nodes = self.GetDataNodesForUpload(filename, chunk_size, i)
-            print(data_nodes)
-
+            
             if not data_nodes:
                 raise Exception(f"No available nodes to store chunk {i}")
-            print(f'Uploading chunk {i} to {data_nodes[0].ip}:{data_nodes[0].port}')
+            
             for node in data_nodes:
-                print(node)
                 data_node_ip, data_node_port = self.GetDataNode(node)
                 print(f'Uploading chunk {i} to {data_node_ip}:{data_node_port}')
-
+                
                 data_node_channel = grpc.insecure_channel(f'{data_node_ip}:{data_node_port}')
                 data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
-
+                
                 response = data_node_stub.SendFile(
                     data_node_pb2.FileChunk(
-                        chunk_data=chunk.data,
+                        chunk_data=chunk.buffer,
                         filename=filename,
                         chunk_number=i,
                         total_chunks=total_chunks
                     )
                 )
                 print(f'Chunk {i} uploaded, server reported length: {response.length}')
-
-
 
     def DownloadFile(self, filename: str):
         data_nodes = self.GetDataNodesForDownload(filename)

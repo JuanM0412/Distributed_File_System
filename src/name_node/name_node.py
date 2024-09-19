@@ -87,29 +87,6 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
 
         return None
 
-
-
-    def GetDataNodesForDownload(self, request, context):
-        file = request.file
-        username = request.username
-        data_nodes = list(database.dataNodes.find())
-
-        response = name_node_pb2.DataNodesResponse()
-        for data_node in data_nodes:
-            data_node_info = name_node_pb2.DataNodeInfo(
-                id=str(
-                    data_node['_id']), ip=str(
-                    data_node['ip']), port=str(
-                    data_node['port']), capacity_MB=data_node['storage'])
-            response.nodes.append(data_node_info)
-            # This break will be in this for while we realize how choose in
-            # which datanodes we are going to save a file. For the same reason
-            # I asked for the filename. In this way, we are going to add the
-            # files just in the first data_node, then it will be different
-            break
-
-        return response
-
     def AddUser(self, request, context):
         # Extract the info about the user.
         username = request.username
