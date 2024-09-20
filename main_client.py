@@ -8,7 +8,7 @@ from pyfiglet import Figlet
 
 """
 def print_welcome_message():
-    figlet = Figlet(font='small')  # Puedes cambiar el estilo de fuente aquí
+    figlet = Figlet(font='small') 
     message = figlet.renderText('Welcome to HDFS CLI')
     print(Fore.BLUE + Style.BRIGHT + message + Style.RESET_ALL)
 

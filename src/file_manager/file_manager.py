@@ -67,6 +67,7 @@ class FileManager:
             current_dir = next(
                 (item for item in current_dir["Contents"] if item["IsDir"] and item["Name"] == part),
                 None)
+            
 
         return current_dir
 
@@ -107,11 +108,6 @@ class FileManager:
 
         dir_to_remove = parent_dir['Contents'][dir_index]
 
-        if not force and len(dir_to_remove['Contents']) > 0:
-            print(
-                f"Directory {path} is not empty. Use force=True to remove non-empty directories")
-            return
-
         del parent_dir['Contents'][dir_index]
         print(f"Directory {path} removed successfully")
 
@@ -148,6 +144,15 @@ class FileManager:
                 print(f"{BLUE}{item['Name']}/{RESET}")
             else:
                 print(f"{WHITE}{item['Name']}{RESET}")
+    
+    def DirectoryExists(self, path):
+        user_data = self.users_collection.find_one({"Username": self.username})
+        if not user_data:
+            print("User not found")
+            return False
+
+        result = self.FindDirectory(user_data['Directories'], path)
+        return result is not None
 
     def Put(self, path: str, file_name: str, file_size: int = 0):
         if self.username is None:
