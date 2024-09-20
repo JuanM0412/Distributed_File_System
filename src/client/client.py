@@ -86,36 +86,5 @@ class Client:
             )
         print(f'Response: {response.status}')
 
-    def MakeDirectory(self, path: str):
-        if self.file_manager:
-            self.file_manager.MakeDirectory(path)
-
-    def Put(self, path: str, file_name: str, file_size: int = 0):
-        if self.file_manager:
-            self.file_manager.Put(path, file_name, file_size)
-
-    def RemoveDirectory(self, path: str, force: bool = False):
-        if self.file_manager:
-            self.file_manager.RemoveDirectory(path, force)
-
-    def ListDirectory(self, path: str):
-        if self.file_manager:
-            self.file_manager.ListDirectory(path)
-
-    def Rm(self, path: str, file_name: str):
-        if self.file_manager:
-            self.file_manager.Rm(path, file_name)
-
-    def FindDirectory(self, directories, path):
-        if self.file_manager:
-            self.file_manager.FindDirectory(directories, path)
-
-    def directory_exists(self, path):
-        print(f"Checking if directory exists: {path}")
-        user_data = self.users_collection.find_one({"Username": self.username})
-        if not user_data:
-            print("User not found")
-            return False
-        result = self.FindDirectory(user_data['Directories'], path)
-        print(f"FindDirectory result: {result}")
-        return result is not None
+    def GetFileManager(self):
+        return self.file_manager

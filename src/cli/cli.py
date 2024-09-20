@@ -31,9 +31,14 @@ class CLI:
                     self.rm(args)
                 elif cmd == 'put':
                     self.put(args)
+                elif cmd == 'clear':
+                    self.clear()
                 else:
                     print(f"Command '{cmd}' not found.")
 
+    def clear(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
+    
     def cd(self, args):
         if len(args) != 1:
             print("Usage: cd <directory>")
@@ -56,44 +61,42 @@ class CLI:
                 '//',
                 '/')
 
-        if not self.client.directory_exists(new_path):
+        if not self.client.GetFileManager().DirectoryExists(new_path):
             print(f"Directory {new_path} does not exist.")
         else:
             self.current_path = new_path
 
     def ls(self, args):
-        """Listar los archivos y directorios"""
         path = self.current_path if len(args) == 0 else args[0]
-        self.client.ListDirectory(path)
+        self.client.GetFileManager().ListDirectory(path)
 
     def mkdir(self, args):
-        """Crear un directorio"""
         if len(args) != 1:
             print("Usage: mkdir <directory_name>")
             return
         dir_name = args[0]
-        self.client.MakeDirectory(os.path.join(self.current_path, dir_name))
+        self.client.GetFileManager().MakeDirectory(os.path.join(self.current_path, dir_name))
 
     def rm(self, args):
-        """Eliminar un archivo o directorio"""
         if len(args) != 2:
             print("Usage: rm <directory/file> <name>")
             return
         path = args[0]
         file_name = args[1]
         if path == 'dir':
-            self.client.RemoveDirectory(file_name)
+            force = False
+            if(len(args) == 3):
+                force = bool(args[3].split('=')[1])
+            self.client.GetFileManager().RemoveDirectory(file_name, force)
         else:
-            self.client.Rm(self.current_path, file_name)
+            self.client.GetFileManager().Rm(self.current_path, file_name)
 
     def put(self, args):
-        """Subir un archivo al sistema"""
         if len(args) != 1:
             print("Usage: put <file_name>")
             return
         file_name = args[0]
-        # Puedes ajustar el tamaño del archivo según sea necesario
-        self.client.Put(
+        self.client.GetFileManager().Put(
             self.current_path,
             file_name,
             os.path.getsize(file_name))
