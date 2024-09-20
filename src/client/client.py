@@ -8,6 +8,7 @@ from src.file_manager.file_manager import FileManager
 
 
 class Client:
+
     def __init__(self, ip: str, port: int, server_ip: str, server_port: int):
         self.ip = ip
         self.port = port
@@ -18,6 +19,7 @@ class Client:
         self.file_manager = None
 
         print(f'Connecting to {server_ip}:{server_port}')
+
         self.server_channel = grpc.insecure_channel(
             f'{server_ip}:{server_port}')
         self.server_stub = name_node_pb2_grpc.NameNodeServiceStub(
@@ -30,13 +32,16 @@ class Client:
             username=self.username,
             chunk_number=chunk_number
         )
+
         response = self.server_stub.GetDataNodesForUpload(request)
+
         return response.nodes
 
     def GetDataNodesForDownload(self, filename: str):
         response = self.server_stub.GetDataNodesForDownload(
             name_node_pb2.DataNodesDownloadRequest(
                 file=filename, username=self.username))
+        
         return response.nodes
 
     def GetDataNode(self, data_node):
