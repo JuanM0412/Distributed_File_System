@@ -8,7 +8,7 @@ def GetFileChunks(file_path):
             chunk = f.read(MB_IN_BYTES)
             if not chunk:
                 break
-            yield data_node_pb2.Chunk(buffer=chunk)
+            yield data_node_pb2.FileChunk(chunk_data=chunk)
 
 
 def SaveChunksToFile(chunks, filename):

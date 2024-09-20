@@ -3,6 +3,7 @@ import grpc
 import json
 from concurrent import futures
 from src.models.datanode import DataNode
+from src.models.namenode import Block, MetaData
 from src.models.user import User
 from config.db import database
 import random
@@ -34,9 +35,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
         return name_node_pb2.RegisterResponse(id=str(data_node.inserted_id))
     
     def GetDataNodesForUpload(self, request, context):
-        file = request.file
         chunk_size = request.size
-        chunk_number = request.chunk_number
 
         response = name_node_pb2.DataNodesResponse()
 
@@ -47,31 +46,69 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                 selected_nodes.add(selected_node)
             else:
                 break
-
+        
+        print(f"Selected nodes: {selected_nodes}")
+        blocks = []
+        blocks_counter = 0
+        slaves = []
+            
         for node_id in selected_nodes:
             data_node = database.dataNodes.find_one({'_id': node_id})
-            data_node_info = name_node_pb2.DataNodeInfo(
-                id=str(data_node['_id']),
-                ip=data_node['ip'],
-                port=data_node['port'],
-                capacity_MB=data_node['storage']
-            )
-            response.nodes.append(data_node_info)
 
+            if data_node:
+                try:
+                    data_node_info = name_node_pb2.DataNodeInfo(
+                        id=str(data_node['_id']),
+                        ip=data_node['Ip'],
+                        port=data_node['Port'],
+                        capacity_MB=data_node['CapacityMB']
+                    )
+                    print(f'Created DataNodeInfo: id={data_node_info.id}, ip={data_node_info.ip}, port={data_node_info.port}, capacity_MB={data_node_info.capacity_MB}')
+                    response.nodes.append(data_node_info)
+
+                    if blocks_counter == 0:
+                        master_node = data_node_info.id
+                    else:
+                        slaves.append(data_node_info.id)
+                    blocks_counter += 1
+
+                except KeyError as e:
+                    print(f"Error creating DataNodeInfo: Missing key {e}")
+        
+        if selected_nodes:
+            block = Block(Master=master_node, Slaves=slaves)
+            blocks.append(block)
+        
+            metadata = MetaData(
+                Name=request.file, 
+                SizeMB=request.size,
+                Blocks=blocks,
+                Owner=request.username
+            )
+            
+            metadata = database.metaData.insert_one(metadata.model_dump())
+            print(f'Metadata saved: {metadata}')
+        
         return response
+        
+    def print_response(response):
+        print(f"Response type: {type(response)}")
+        print(f"Response contains {len(response.nodes)} nodes")
+        for i, node in enumerate(response.nodes):
+            print(f'Node {i}: id={node.id}, ip={node.ip}, port={node.port}, capacity_MB={node.capacity_MB}')
+
 
     def randomWeight(self, chunk_size, excluded_nodes):
         data_nodes = list(database.dataNodes.find())
-        
-        filtered_data_nodes = [
-            data_node for data_node in data_nodes
-            if data_node.get('storage', 0) >= chunk_size and data_node['_id'] not in excluded_nodes
-        ]
-
+        filtered_data_nodes = []
+        for data_node in data_nodes:
+            if data_node.get('CapacityMB', 0) >= chunk_size and data_node['_id'] not in excluded_nodes:
+                filtered_data_nodes.append(data_node)
+    
         if not filtered_data_nodes:
             return None
 
-        capacities = [data_node.get('storage', 0) for data_node in filtered_data_nodes]
+        capacities = [data_node.get('CapacityMB', 0) for data_node in filtered_data_nodes]
         values = [data_node['_id'] for data_node in filtered_data_nodes]
 
         total_capacity = sum(capacities)
