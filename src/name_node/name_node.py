@@ -1,12 +1,15 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
+
 import grpc
 import json
 from concurrent import futures
+import random
+
 from src.models.datanode import DataNode
 from src.models.namenode import Block, MetaData
 from src.models.user import User
+
 from config.db import database
-import random
 
 class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     def __init__(self, ip: str, port: int):
@@ -36,12 +39,11 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     
     def GetDataNodesForUpload(self, request, context):
         chunk_size = request.size
-
         response = name_node_pb2.DataNodesResponse()
-
         selected_nodes = set()
+
         while len(selected_nodes) < 3:
-            selected_node = self.randomWeight(chunk_size, selected_nodes) 
+            selected_node = self.RandomWeight(chunk_size, selected_nodes) 
             if selected_node:
                 selected_nodes.add(selected_node)
             else:
@@ -91,14 +93,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
         
         return response
         
-    def print_response(response):
-        print(f"Response type: {type(response)}")
-        print(f"Response contains {len(response.nodes)} nodes")
-        for i, node in enumerate(response.nodes):
-            print(f'Node {i}: id={node.id}, ip={node.ip}, port={node.port}, capacity_MB={node.capacity_MB}')
-
-
-    def randomWeight(self, chunk_size, excluded_nodes):
+    def RandomWeight(self, chunk_size, excluded_nodes):
         data_nodes = list(database.dataNodes.find())
         filtered_data_nodes = []
         for data_node in data_nodes:
@@ -121,8 +116,6 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                 return values[i]
 
         return None
-
-
 
     def GetDataNodesForDownload(self, request, context):
         file = request.file
