@@ -8,5 +8,3 @@ class DataNode(BaseModel):
     CapacityMB: int
     IsActive: bool
     Blocks: List[str]
-
-
