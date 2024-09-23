@@ -22,19 +22,21 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x01\"\"\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t2v\n\x08\x44\x61taNode\x12\x30\n\x08SendFile\x12\x10.data_node.Chunk\x1a\x10.data_node.Reply(\x01\x12\x38\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x10.data_node.Chunk0\x01\x62\x06proto3')
+
+
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"o\n\tFileChunk\x12\x12\n\nchunk_data\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x14\n\x0c\x63hunk_number\x18\x03 \x01(\x05\x12\x14\n\x0ctotal_chunks\x18\x04 \x01(\x05\x12\x10\n\x08username\x18\x05 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\"\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t2|\n\x08\x44\x61taNode\x12\x32\n\x08SendFile\x12\x14.data_node.FileChunk\x1a\x10.data_node.Reply\x12<\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x14.data_node.FileChunk0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'data_node_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-    DESCRIPTOR._loaded_options = None
-    _globals['_CHUNK']._serialized_start = 30
-    _globals['_CHUNK']._serialized_end = 53
-    _globals['_REPLY']._serialized_start = 55
-    _globals['_REPLY']._serialized_end = 78
-    _globals['_GETFILEREQUEST']._serialized_start = 80
-    _globals['_GETFILEREQUEST']._serialized_end = 114
-    _globals['_DATANODE']._serialized_start = 116
-    _globals['_DATANODE']._serialized_end = 234
+  DESCRIPTOR._loaded_options = None
+  _globals['_FILECHUNK']._serialized_start=30
+  _globals['_FILECHUNK']._serialized_end=141
+  _globals['_REPLY']._serialized_start=143
+  _globals['_REPLY']._serialized_end=166
+  _globals['_GETFILEREQUEST']._serialized_start=168
+  _globals['_GETFILEREQUEST']._serialized_end=202
+  _globals['_DATANODE']._serialized_start=204
+  _globals['_DATANODE']._serialized_end=328
 # @@protoc_insertion_point(module_scope)

@@ -6,7 +6,7 @@ import argparse
 from colorama import init, Fore, Style
 from pyfiglet import Figlet
 
-
+"""
 def print_welcome_message():
     figlet = Figlet(font='small') 
     message = figlet.renderText('Welcome to HDFS CLI')
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     main(username=args.username, password=args.password)
 
-    """
+    
 
     # SplitFile("/home/sebas/Downloads/test_tel.mp4")
 
@@ -76,4 +76,12 @@ if __name__ == '__main__':
     #client.DownloadFile('test1.txt')
 
 
-    """
+"""
+
+if __name__ == '__main__':
+    client = Client(CLIENT_IP, CLIENT_PORT, SERVER_IP, SERVER_PORT)
+    print('Calling Register method...')
+    client.Register(username='JuanM04121', password='Test123')
+    input('Press Enter to continue...')
+    client.UploadFile('test.txt')
+    #client.DownloadFile('test1.txt')

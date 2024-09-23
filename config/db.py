@@ -23,6 +23,14 @@ class Database:
     @property
     def dataNodes(self):
         return self._db.dataNodes
+    
+    @property
+    def blocks(self):
+        return self._db.blocks
+
+    @property
+    def metaData(self):
+        return self._db.metaData
 
 
 database = Database(uri=MONGO_CLIENT, db_name=DB_NAME)

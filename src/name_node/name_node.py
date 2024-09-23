@@ -1,11 +1,15 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
+
 import grpc
 import json
 from concurrent import futures
-from src.models.datanode import DataNode
-from src.models.user import User
-from config.db import database
+import random
 
+from src.models.datanode import DataNode
+from src.models.namenode import Block, MetaData
+from src.models.user import User
+
+from config.db import database
 
 class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     def __init__(self, ip: str, port: int):
@@ -32,26 +36,86 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
         data_node = database.dataNodes.insert_one(data_node_info.model_dump())
         print('data_node:', data_node.inserted_id)
         return name_node_pb2.RegisterResponse(id=str(data_node.inserted_id))
-
+    
     def GetDataNodesForUpload(self, request, context):
-        file = request.file
-        data_nodes = list(database.dataNodes.find())
-
+        chunk_size = request.size
         response = name_node_pb2.DataNodesResponse()
-        for data_node in data_nodes:
-            data_node_info = name_node_pb2.DataNodeInfo(
-                id=str(
-                    data_node['_id']), ip=str(
-                    data_node['ip']), port=str(
-                    data_node['port']), capacity_MB=data_node['storage'])
-            response.nodes.append(data_node_info)
-            # This break will be in this for while we realize how choose in
-            # which datanodes we are going to save a file. For the same reason
-            # I asked for the filename. In this way, we are going to add the
-            # files just in the first data_node, then it will be different
-            break
+        selected_nodes = set()
 
+        while len(selected_nodes) < 3:
+            selected_node = self.RandomWeight(chunk_size, selected_nodes) 
+            if selected_node:
+                selected_nodes.add(selected_node)
+            else:
+                break
+        
+        print(f"Selected nodes: {selected_nodes}")
+        blocks = []
+        blocks_counter = 0
+        slaves = []
+            
+        for node_id in selected_nodes:
+            data_node = database.dataNodes.find_one({'_id': node_id})
+
+            if data_node:
+                try:
+                    data_node_info = name_node_pb2.DataNodeInfo(
+                        id=str(data_node['_id']),
+                        ip=data_node['Ip'],
+                        port=data_node['Port'],
+                        capacity_MB=data_node['CapacityMB']
+                    )
+                    print(f'Created DataNodeInfo: id={data_node_info.id}, ip={data_node_info.ip}, port={data_node_info.port}, capacity_MB={data_node_info.capacity_MB}')
+                    response.nodes.append(data_node_info)
+
+                    if blocks_counter == 0:
+                        master_node = data_node_info.id
+                    else:
+                        slaves.append(data_node_info.id)
+                    blocks_counter += 1
+
+                except KeyError as e:
+                    print(f"Error creating DataNodeInfo: Missing key {e}")
+        
+        if selected_nodes:
+            block = Block(Master=master_node, Slaves=slaves)
+            blocks.append(block)
+        
+            metadata = MetaData(
+                Name=request.file, 
+                SizeMB=request.size,
+                Blocks=blocks,
+                Owner=request.username
+            )
+            
+            metadata = database.metaData.insert_one(metadata.model_dump())
+            print(f'Metadata saved: {metadata}')
+        
         return response
+        
+    def RandomWeight(self, chunk_size, excluded_nodes):
+        data_nodes = list(database.dataNodes.find())
+        filtered_data_nodes = []
+        for data_node in data_nodes:
+            if data_node.get('CapacityMB', 0) >= chunk_size and data_node['_id'] not in excluded_nodes:
+                filtered_data_nodes.append(data_node)
+    
+        if not filtered_data_nodes:
+            return None
+
+        capacities = [data_node.get('CapacityMB', 0) for data_node in filtered_data_nodes]
+        values = [data_node['_id'] for data_node in filtered_data_nodes]
+
+        total_capacity = sum(capacities)
+        probability = [c / total_capacity for c in capacities]
+        accumulative_probability = [sum(probability[:i+1]) for i in range(len(probability))]
+        random_ = random.uniform(0, 1)
+        
+        for i, prob in enumerate(accumulative_probability):
+            if random_ <= prob:
+                return values[i]
+
+        return None
 
     def GetDataNodesForDownload(self, request, context):
         file = request.file

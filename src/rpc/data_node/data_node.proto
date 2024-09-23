@@ -3,16 +3,20 @@ syntax = "proto3";
 package data_node;
 
 service DataNode {
-    rpc SendFile(stream Chunk) returns (Reply);
-    rpc GetFile(GetFileRequest) returns (stream Chunk);
+    rpc SendFile(FileChunk) returns (Reply);
+    rpc GetFile(GetFileRequest) returns (stream FileChunk);
 }
 
-message Chunk {
-    bytes buffer = 1;
+message FileChunk {
+    bytes chunk_data = 1;
+    string filename = 2;
+    int32 chunk_number = 3;
+    int32 total_chunks = 4;
+    string username = 5;
 }
 
 message Reply {
-    double length = 1;
+    int32 length = 1;
 }
 
 message GetFileRequest {
