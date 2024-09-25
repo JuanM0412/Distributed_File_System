@@ -3,7 +3,7 @@ syntax = "proto3";
 package data_node;
 
 service DataNode {
-    rpc SendFile(stream BlockChunk) returns (Reply);
+    rpc SendFile(BlockChunk) returns (Reply);
     rpc GetFile(GetFileRequest) returns (stream BlockChunk);
 }
 

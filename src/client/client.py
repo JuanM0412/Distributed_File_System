@@ -20,6 +20,11 @@ class Client:
 
         print(f'Connecting to {server_ip}:{server_port}')
 
+        options = [
+            ('grpc.max_send_message_length', 100 * 1024 * 1024),  # 100 MB
+            ('grpc.max_receive_message_length', 100 * 1024 * 1024),  # 100 MB
+        ]
+
         self.server_channel = grpc.insecure_channel(
             f'{server_ip}:{server_port}')
         self.server_stub = name_node_pb2_grpc.NameNodeServiceStub(
@@ -57,6 +62,11 @@ class Client:
         
         print(f'Uploading file {filename_} of size {file_size} MB')
         print(f'Total blocks: {total_blocks}')
+
+        options = [
+            ('grpc.max_send_message_length', 200 * 1024 * 1024),  
+            ('grpc.max_receive_message_length', 200 * 1024 * 1024),  
+        ]
         
         for i, block in enumerate(blocks):
             print(f'Uploading block {i}')
@@ -69,6 +79,8 @@ class Client:
                 size=block_size_MB,
                 username=self.username
             )
+
+            user_ = self.username
             
             response = self.server_stub.GetDataNodesForUpload(request)
             
@@ -78,27 +90,28 @@ class Client:
             if not response.nodes:
                 raise Exception(f"No available nodes to store block {i}")
             
+            # Leer el contenido del bloque
+            with open(block, 'rb') as f:
+                block_data = f.read()
+            
+            # Crear el mensaje BlockChunk
+            block_chunk = data_node_pb2.BlockChunk(
+                block_data=block_data,
+                filename=filename_,
+                block_number=i,
+                total_blocks=total_blocks,
+                username=self.username
+            )
+            
+            # Enviar el mensaje al DataNode
             for node in response.nodes:
-                print(f'Uploading block {i} to node: id={node.id}, ip={node.ip}, port={node.port}')
-                
-                data_node_channel = grpc.insecure_channel(f'{node.ip}:{node.port}')
+                data_node_channel = grpc.insecure_channel(f'{node.ip}:{node.port}', options=options)
                 data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
-
-                def StreamChunks():
-                    for chunk in GetFileChunks(block):
-                        yield data_node_pb2.BlockChunk(
-                            block_data=chunk,
-                            filename=filename_,
-                            block_number=i,
-                            total_blocks=total_blocks,
-                            username=self.username
-                        )
-                
-                upload_response = data_node_stub.SendFile(StreamChunks())
-                
-                print(f'block {i} uploaded to node {node.id}, server reported length: {upload_response.length}')
+                upload_response = data_node_stub.SendFile(block_chunk)
+                print(f'Block {i} uploaded to node {node.id}, server reported success: {upload_response.success}')
 
         print(f'File {filename_} upload complete')
+
 
     def DownloadFile(self, filename: str):
         data_nodes = self.GetDataNodesForDownload(filename)

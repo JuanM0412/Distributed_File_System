@@ -66,7 +66,11 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
             yield chunk
 
     def StartServer(self):
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        options = [
+            ('grpc.max_send_message_length', 200 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 200 * 1024 * 1024),
+        ]
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),options=options)
         data_node_pb2_grpc.add_DataNodeServicer_to_server(self, server)
         server.add_insecure_port(f'{self.ip}:{self.port}')
         server.start()
