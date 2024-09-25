@@ -114,7 +114,7 @@ class Client:
                 data_node_channel = grpc.insecure_channel(f'{node.ip}:{node.port}', options=options)
                 data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
                 upload_response = data_node_stub.SendFile(block_chunk)
-                print(f'Block {i} uploaded to node {node.id}, server reported success: {upload_response.success}')
+                print(f'Block {i} uploaded to node {node.id}, server reported success: {upload_response.length}')
 
         print(f'File {filename_} upload complete')
 
