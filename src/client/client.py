@@ -90,11 +90,16 @@ class Client:
             if not response.nodes:
                 raise Exception(f"No available nodes to store block {i}")
             
-            # Leer el contenido del bloque
             with open(block, 'rb') as f:
                 block_data = f.read()
             
-            # Crear el mensaje BlockChunk
+            
+            for node in response.nodes:
+                print(f'Node ID: {node.id}')
+                print(f'Node IP: {node.ip}')
+                print(f'Node Port: {node.port}')
+                print(f'Node Capacity (MB): {node.capacity_MB}')
+                
             block_chunk = data_node_pb2.BlockChunk(
                 block_data=block_data,
                 filename=filename_,
@@ -102,9 +107,10 @@ class Client:
                 total_blocks=total_blocks,
                 username=self.username
             )
-            
-            # Enviar el mensaje al DataNode
+            print("JA")
+            print(response.nodes.id)
             for node in response.nodes:
+                print(block_chunk)
                 data_node_channel = grpc.insecure_channel(f'{node.ip}:{node.port}', options=options)
                 data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
                 upload_response = data_node_stub.SendFile(block_chunk)
