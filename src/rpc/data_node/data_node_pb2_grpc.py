@@ -34,22 +34,22 @@ class DataNodeStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.SendFile = channel.unary_unary(
+        self.SendFile = channel.stream_unary(
                 '/data_node.DataNode/SendFile',
-                request_serializer=data__node__pb2.FileChunk.SerializeToString,
+                request_serializer=data__node__pb2.BlockChunk.SerializeToString,
                 response_deserializer=data__node__pb2.Reply.FromString,
                 _registered_method=True)
         self.GetFile = channel.unary_stream(
                 '/data_node.DataNode/GetFile',
                 request_serializer=data__node__pb2.GetFileRequest.SerializeToString,
-                response_deserializer=data__node__pb2.FileChunk.FromString,
+                response_deserializer=data__node__pb2.BlockChunk.FromString,
                 _registered_method=True)
 
 
 class DataNodeServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def SendFile(self, request, context):
+    def SendFile(self, request_iterator, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -64,15 +64,15 @@ class DataNodeServicer(object):
 
 def add_DataNodeServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'SendFile': grpc.unary_unary_rpc_method_handler(
+            'SendFile': grpc.stream_unary_rpc_method_handler(
                     servicer.SendFile,
-                    request_deserializer=data__node__pb2.FileChunk.FromString,
+                    request_deserializer=data__node__pb2.BlockChunk.FromString,
                     response_serializer=data__node__pb2.Reply.SerializeToString,
             ),
             'GetFile': grpc.unary_stream_rpc_method_handler(
                     servicer.GetFile,
                     request_deserializer=data__node__pb2.GetFileRequest.FromString,
-                    response_serializer=data__node__pb2.FileChunk.SerializeToString,
+                    response_serializer=data__node__pb2.BlockChunk.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -86,7 +86,7 @@ class DataNode(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def SendFile(request,
+    def SendFile(request_iterator,
             target,
             options=(),
             channel_credentials=None,
@@ -96,11 +96,11 @@ class DataNode(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
+        return grpc.experimental.stream_unary(
+            request_iterator,
             target,
             '/data_node.DataNode/SendFile',
-            data__node__pb2.FileChunk.SerializeToString,
+            data__node__pb2.BlockChunk.SerializeToString,
             data__node__pb2.Reply.FromString,
             options,
             channel_credentials,
@@ -128,7 +128,7 @@ class DataNode(object):
             target,
             '/data_node.DataNode/GetFile',
             data__node__pb2.GetFileRequest.SerializeToString,
-            data__node__pb2.FileChunk.FromString,
+            data__node__pb2.BlockChunk.FromString,
             options,
             channel_credentials,
             insecure,

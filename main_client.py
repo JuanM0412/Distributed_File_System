@@ -83,5 +83,5 @@ if __name__ == '__main__':
     print('Calling Register method...')
     client.Register(username='JuanM04121', password='Test123')
     input('Press Enter to continue...')
-    client.UploadFile('test.txt')
+    client.UploadFile('/home/juan/Downloads/video.mp4')
     #client.DownloadFile('test1.txt')

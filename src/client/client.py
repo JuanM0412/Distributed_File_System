@@ -1,14 +1,14 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
 from utils.utils import GetFileSize, GetFileChunks, SaveChunksToFile
+from src.client.manage_blocks import SplitFile
 from config.db import database
 from config import MB_IN_BYTES
-import grpc
+import grpc, os
 from src.file_manager.file_manager import FileManager
 
 
 class Client:
-
     def __init__(self, ip: str, port: int, server_ip: str, server_port: int):
         self.ip = ip
         self.port = port
@@ -52,50 +52,51 @@ class Client:
         file_size = int(GetFileSize(filename_))
         print(f'File size: {file_size}')
         
-        chunks = list(GetFileChunks(filename_))
-        total_chunks = len(chunks)
+        blocks = list(SplitFile(filename_))
+        total_blocks = len(blocks)
         
-        print(f'Uploading file {filename_} of size {file_size} bytes')
-        print(f'Total chunks: {total_chunks}')
+        print(f'Uploading file {filename_} of size {file_size} MB')
+        print(f'Total blocks: {total_blocks}')
         
-        for i, chunk in enumerate(chunks):
-            print(f'Uploading chunk {i}')
-            chunk_size_bytes = len(chunk.chunk_data)
-            chunk_size = chunk_size_bytes / MB_IN_BYTES
-            print(f'Chunk size: {chunk_size}')
+        for i, block in enumerate(blocks):
+            print(f'Uploading block {i}')
+            block_size_bytes = os.path.getsize(block)
+            block_size_MB = block_size_bytes / MB_IN_BYTES
+            print(f'Block size: {block_size_MB} MB')
             
             request = name_node_pb2.DataNodesUploadRequest(
                 file=filename_,
-                size=chunk_size,
+                size=block_size_MB,
                 username=self.username
             )
             
             response = self.server_stub.GetDataNodesForUpload(request)
             
-            print(f'Received response from server for chunk {i}')
+            print(f'Received response from server for block {i}')
             print(f'Number of data nodes available: {len(response.nodes)}')
             
             if not response.nodes:
-                raise Exception(f"No available nodes to store chunk {i}")
+                raise Exception(f"No available nodes to store block {i}")
             
             for node in response.nodes:
-                print(f'Uploading chunk {i} to node: id={node.id}, ip={node.ip}, port={node.port}')
+                print(f'Uploading block {i} to node: id={node.id}, ip={node.ip}, port={node.port}')
                 
                 data_node_channel = grpc.insecure_channel(f'{node.ip}:{node.port}')
                 data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
-                file = data_node_pb2.FileChunk(
-                        chunk_data=chunk.chunk_data,
-                        filename=filename_,
-                        chunk_number=i,
-                        total_chunks=total_chunks,
-                        username=self.username,
-                    )
-                print(file.filename, file.chunk_number, file.total_chunks)
-                print(f'Uploading chunk {i} to node {node.id}')
-                upload_response = data_node_stub.SendFile(
-                    file
-                )
-                print(f'Chunk {i} uploaded to node {node.id}, server reported length: {upload_response.length}')
+
+                def StreamChunks():
+                    for chunk in GetFileChunks(block):
+                        yield data_node_pb2.BlockChunk(
+                            block_data=chunk,
+                            filename=filename_,
+                            block_number=i,
+                            total_blocks=total_blocks,
+                            username=self.username
+                        )
+                
+                upload_response = data_node_stub.SendFile(StreamChunks())
+                
+                print(f'block {i} uploaded to node {node.id}, server reported length: {upload_response.length}')
 
         print(f'File {filename_} upload complete')
 
