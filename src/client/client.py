@@ -6,7 +6,7 @@ from config.db import database
 from config import MB_IN_BYTES
 import grpc, os
 from src.file_manager.file_manager import FileManager
-
+import random
 
 class Client:
     def __init__(self, ip: str, port: int, server_ip: str, server_port: int):
@@ -45,7 +45,10 @@ class Client:
     def GetDataNodesForDownload(self, filename: str):
         response = self.server_stub.GetDataNodesForDownload(
             name_node_pb2.DataNodesDownloadRequest(
-                file=filename, username=self.username))
+                file=filename,
+                username=self.username
+            )
+        )
         
         return response.nodes
 
@@ -93,13 +96,6 @@ class Client:
             with open(block, 'rb') as f:
                 block_data = f.read()
             
-            
-            for node in response.nodes:
-                print(f'Node ID: {node.id}')
-                print(f'Node IP: {node.ip}')
-                print(f'Node Port: {node.port}')
-                print(f'Node Capacity (MB): {node.capacity_MB}')
-                
             block_chunk = data_node_pb2.BlockChunk(
                 block_data=block_data,
                 filename=filename_,
@@ -107,10 +103,8 @@ class Client:
                 total_blocks=total_blocks,
                 username=self.username
             )
-            print("JA")
-            print(response.nodes.id)
+            
             for node in response.nodes:
-                print(block_chunk)
                 data_node_channel = grpc.insecure_channel(f'{node.ip}:{node.port}', options=options)
                 data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
                 upload_response = data_node_stub.SendFile(block_chunk)
@@ -121,18 +115,24 @@ class Client:
 
     def DownloadFile(self, filename: str):
         data_nodes = self.GetDataNodesForDownload(filename)
-        data_node_ip, data_node_port = self.GetDataNode(data_nodes[0])
+        
+        node_position = random.randint(0, len(data_nodes) - 1)
+        data_node = data_nodes[node_position]
+        data_node_ip = data_node.ip
+        data_node_port = data_node.port
         print(f'{data_node_ip}:{data_node_port}')
 
-        data_node_channel = grpc.insecure_channel(
-            f'{data_node_ip}:{data_node_port}')
+        data_node_channel = grpc.insecure_channel(f'{data_node_ip}:{data_node_port}')
         data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
 
         response = data_node_stub.GetFile(
             data_node_pb2.GetFileRequest(
-                filename=filename))
+                filename=filename
+            )
+        )
 
         SaveChunksToFile(response, filename)
+
 
     def Register(self, username: str, password: str):
         response = self.server_stub.AddUser(
