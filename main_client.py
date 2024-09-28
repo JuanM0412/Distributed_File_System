@@ -81,7 +81,7 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     client = Client(CLIENT_IP, CLIENT_PORT, SERVER_IP, SERVER_PORT)
     print('Calling Register method...')
-    client.Register(username='JuanM04121', password='Test123')
+    client.Register(username='JuanM041221', password='Test123')
     input('Press Enter to continue...')
     client.UploadFile(r'C:\Users\Luisa\Downloads\temp\VID_20231023_120541.mp4')
-    #client.DownloadFile('test1.txt')
+    #client.DownloadFile(r'C:\Users\Luisa\Downloads\temp\VID_20231023_120541.mp4')

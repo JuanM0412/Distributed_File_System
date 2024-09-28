@@ -8,6 +8,6 @@ class Block(BaseModel):
 class MetaData(BaseModel):
     Name: str
     SizeMB: float
-    Blocks: List[Block]
+    Blocks: List[str]
     Owner: str
     

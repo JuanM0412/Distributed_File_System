@@ -5,6 +5,7 @@ from config import MB_IN_BYTES
 import grpc
 import os
 from concurrent import futures
+from config.db import database
 
 
 class DataNode(data_node_pb2_grpc.DataNodeServicer):
@@ -37,7 +38,7 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         os.makedirs(user_dir, exist_ok=True) 
 
         # Change this to the user's directory
-        file_dir = '/home/juan/University/Tópicos_en_Telemática/Distributed_File_System/src/data_node/storage/JuanM0412'
+        file_dir = r'C:\Users\Luisa\Documents\computer-science\6\topicos_tel\Distributed_File_System\src\data_node\storage\JuanM0412'
         print('File dir:', file_dir)
         os.makedirs(file_dir, exist_ok=True)  
 
@@ -54,9 +55,8 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         print(f"Capacity after: {self.capacity_MB} MB")
         
         file_size = os.path.getsize(block_file_path)
-        return data_node_pb2.Reply(length=file_size)
+        return data_node_pb2.Reply(length=file_size)    
 
-    
     def GetFile(self, request, context):
         filename = os.path.join(self.dir, request.filename)
         if not os.path.exists(filename):
@@ -69,8 +69,8 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
 
     def StartServer(self):
         options = [
-            ('grpc.max_send_message_length', 200 * 1024 * 1024),
-            ('grpc.max_receive_message_length', 200 * 1024 * 1024),
+            ('grpc.max_send_message_length', 1*1024 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 1*1024 * 1024 * 1024),
         ]
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),options=options)
         data_node_pb2_grpc.add_DataNodeServicer_to_server(self, server)

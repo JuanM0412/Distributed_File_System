@@ -31,6 +31,7 @@ message DataNodesUploadRequest {
 
 message DataNodesResponse {
   repeated DataNodeInfo nodes = 1;
+  string block_id = 2; 
 }
 
 message DataNodeInfo {

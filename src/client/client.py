@@ -21,12 +21,12 @@ class Client:
         print(f'Connecting to {server_ip}:{server_port}')
 
         options = [
-            ('grpc.max_send_message_length', 100 * 1024 * 1024),  # 100 MB
-            ('grpc.max_receive_message_length', 100 * 1024 * 1024),  # 100 MB
+            ('grpc.max_send_message_length', 1024 * 1024 * 1024),  
+            ('grpc.max_receive_message_length', 1024 * 1024 * 1024),  
         ]
 
         self.server_channel = grpc.insecure_channel(
-            f'{server_ip}:{server_port}')
+            f'{server_ip}:{server_port}', options=options)
         self.server_stub = name_node_pb2_grpc.NameNodeServiceStub(
             self.server_channel)
 
@@ -49,73 +49,65 @@ class Client:
                 username=self.username
             )
         )
-        
         return response.nodes
 
     def GetDataNode(self, data_node):
         return data_node.ip, data_node.port
 
     def UploadFile(self, filename_: str):
-        print(f'Uploading file {filename_}')
         file_size = int(GetFileSize(filename_))
-        print(f'File size: {file_size}')
         
         blocks = list(SplitFile(filename_))
         total_blocks = len(blocks)
-        
-        print(f'Uploading file {filename_} of size {file_size} MB')
-        print(f'Total blocks: {total_blocks}')
 
         options = [
-            ('grpc.max_send_message_length', 200 * 1024 * 1024),  
-            ('grpc.max_receive_message_length', 200 * 1024 * 1024),  
+            ('grpc.max_send_message_length', 1*1024 * 1024 * 1024),  
+            ('grpc.max_receive_message_length', 1*1024 * 1024 * 1024),  
         ]
         
         for i, block in enumerate(blocks):
-            print(f'Uploading block {i}')
             block_size_bytes = os.path.getsize(block)
             block_size_MB = block_size_bytes / MB_IN_BYTES
-            print(f'Block size: {block_size_MB} MB')
-            
+
             request = name_node_pb2.DataNodesUploadRequest(
                 file=filename_,
                 size=block_size_MB,
-                username=self.username
+                username=self.username,
             )
 
-            user_ = self.username
-            
             response = self.server_stub.GetDataNodesForUpload(request)
-            
-            print(f'Received response from server for block {i}')
-            print(f'Number of data nodes available: {len(response.nodes)}')
-            
+
             if not response.nodes:
                 raise Exception(f"No available nodes to store block {i}")
-            
+
             with open(block, 'rb') as f:
                 block_data = f.read()
             
             block_chunk = data_node_pb2.BlockChunk(
-                block_data=block_data,
-                filename=filename_,
-                block_number=i,
-                total_blocks=total_blocks,
+                block_data= block_data, 
+                filename= filename_,  
+                block_number= i,
                 username=self.username
-            )
+            )  
             
             for node in response.nodes:
                 data_node_channel = grpc.insecure_channel(f'{node.ip}:{node.port}', options=options)
                 data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
-                upload_response = data_node_stub.SendFile(block_chunk)
-                print(f'Block {i} uploaded to node {node.id}, server reported success: {upload_response.length}')
-
+                
+                try:
+                    upload_response = data_node_stub.SendFile(block_chunk)
+                except Exception as e:
+                    print(f"Error uploading to node {node.id}: {str(e)}")
+                    print(f"Error type: {type(e)}")
+                    continue
+        
         print(f'File {filename_} upload complete')
 
-
     def DownloadFile(self, filename: str):
+        print(f'Downloading file {filename}')
         data_nodes = self.GetDataNodesForDownload(filename)
-        
+        print("BUENAS TARDES")
+        print(data_nodes)
         node_position = random.randint(0, len(data_nodes) - 1)
         data_node = data_nodes[node_position]
         data_node_ip = data_node.ip

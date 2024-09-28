@@ -37,12 +37,17 @@ class DataNodeStub(object):
         self.SendFile = channel.unary_unary(
                 '/data_node.DataNode/SendFile',
                 request_serializer=data__node__pb2.BlockChunk.SerializeToString,
-                response_deserializer=data__node__pb2.Reply.FromString,
+                response_deserializer=data__node__pb2.SendFileResponse.FromString,
                 _registered_method=True)
         self.GetFile = channel.unary_stream(
                 '/data_node.DataNode/GetFile',
                 request_serializer=data__node__pb2.GetFileRequest.SerializeToString,
                 response_deserializer=data__node__pb2.BlockChunk.FromString,
+                _registered_method=True)
+        self.StoreBlockID = channel.unary_unary(
+                '/data_node.DataNode/StoreBlockID',
+                request_serializer=data__node__pb2.BlockIDRequest.SerializeToString,
+                response_deserializer=data__node__pb2.Reply.FromString,
                 _registered_method=True)
 
 
@@ -61,18 +66,29 @@ class DataNodeServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def StoreBlockID(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DataNodeServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendFile': grpc.unary_unary_rpc_method_handler(
                     servicer.SendFile,
                     request_deserializer=data__node__pb2.BlockChunk.FromString,
-                    response_serializer=data__node__pb2.Reply.SerializeToString,
+                    response_serializer=data__node__pb2.SendFileResponse.SerializeToString,
             ),
             'GetFile': grpc.unary_stream_rpc_method_handler(
                     servicer.GetFile,
                     request_deserializer=data__node__pb2.GetFileRequest.FromString,
                     response_serializer=data__node__pb2.BlockChunk.SerializeToString,
+            ),
+            'StoreBlockID': grpc.unary_unary_rpc_method_handler(
+                    servicer.StoreBlockID,
+                    request_deserializer=data__node__pb2.BlockIDRequest.FromString,
+                    response_serializer=data__node__pb2.Reply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -101,7 +117,7 @@ class DataNode(object):
             target,
             '/data_node.DataNode/SendFile',
             data__node__pb2.BlockChunk.SerializeToString,
-            data__node__pb2.Reply.FromString,
+            data__node__pb2.SendFileResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -129,6 +145,33 @@ class DataNode(object):
             '/data_node.DataNode/GetFile',
             data__node__pb2.GetFileRequest.SerializeToString,
             data__node__pb2.BlockChunk.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StoreBlockID(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/data_node.DataNode/StoreBlockID',
+            data__node__pb2.BlockIDRequest.SerializeToString,
+            data__node__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,

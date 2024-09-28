@@ -46,8 +46,6 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
             else:
                 break
         
-        print(f"Selected nodes: {selected_nodes}")
-        blocks = []
         blocks_counter = 0
         slaves = []
             
@@ -62,7 +60,6 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                         port=data_node['Port'],
                         capacity_MB=data_node['CapacityMB']
                     )
-                    print(f'Created DataNodeInfo: id={data_node_info.id}, ip={data_node_info.ip}, port={data_node_info.port}, capacity_MB={data_node_info.capacity_MB}')
                     response.nodes.append(data_node_info)
 
                     if blocks_counter == 0:
@@ -75,19 +72,30 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                     print(f"Error creating DataNodeInfo: Missing key {e}")
         
         if selected_nodes:
-            block = Block(Master=master_node, Slaves=slaves)
-            blocks.append(block)
-        
-            metadata = MetaData(
-                Name=request.file, 
-                SizeMB=request.size,
-                Blocks=blocks,
-                Owner=request.username
-            )
+            block = {
+                'Master': master_node, 
+                'Slaves': slaves
+            }
+
+            block_id = database.blocks.insert_one(block).inserted_id
+
+            existing_metadata = database.metaData.find_one({'Name': request.file, 'Owner': request.username})
+
+            if existing_metadata:
+                database.metaData.update_one(
+                    {'_id': existing_metadata['_id']},
+                    {'$push': {'Blocks': block_id}}
+                )
+            else:
+                metadata = MetaData(
+                    Name=request.file, 
+                    SizeMB=request.size,
+                    Blocks=[str(block_id)],
+                    Owner=request.username
+                )
+                database.metaData.insert_one(metadata.model_dump())
+            response.block_id = str(block_id)
             
-            metadata = database.metaData.insert_one(metadata.model_dump())
-            print(f'Metadata saved: {metadata}')
-        
         return response
         
     def RandomWeight(self, chunk_size, excluded_nodes):
@@ -117,12 +125,13 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     def GetDataNodesForDownload(self, request, context):
         file = request.file
         username = request.username
-
-        metadata = database.metaData.find_one({'Name': file, 'Owner': username})
+                
+        metadata_ = database.metaData.find({'Name': file, 'Owner': username})
+        
         
         response = name_node_pb2.DataNodesResponse()
         
-        if metadata:
+        for metadata in metadata_:
             for block in metadata['Blocks']:
                 master_node = database.dataNodes.find_one({'_id': block['Master']})
                 if master_node:
@@ -187,7 +196,11 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
 
 def StartServer(ip: str, port: int):
     print('Server is running')
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    options = [
+        ('grpc.max_send_message_length', 1024 * 1024 * 1024), 
+        ('grpc.max_receive_message_length', 1024 * 1024 * 1024)  
+    ]
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=options)
     name_node_pb2_grpc.add_NameNodeServiceServicer_to_server(
         Server(ip=ip, port=port), server)
     server.add_insecure_port(f'{ip}:{port}')

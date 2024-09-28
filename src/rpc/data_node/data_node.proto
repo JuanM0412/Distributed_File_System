@@ -3,16 +3,16 @@ syntax = "proto3";
 package data_node;
 
 service DataNode {
-    rpc SendFile(BlockChunk) returns (Reply);
+    rpc SendFile(BlockChunk) returns (SendFileResponse);
     rpc GetFile(GetFileRequest) returns (stream BlockChunk);
+    rpc StoreBlockID(BlockIDRequest) returns (Reply);
 }
 
 message BlockChunk {
     bytes block_data = 1;
     string filename = 2;
     int32 block_number = 3;
-    int32 total_blocks = 4;
-    string username = 5;
+    string username = 4;
 }
 
 message Reply {
@@ -21,4 +21,19 @@ message Reply {
 
 message GetFileRequest {
     string filename = 1;
+}
+
+message BlockIDRequest {
+    string block_id = 1;
+    string node_id = 2;
+}
+
+message BlockIDResponse {
+    string block_id = 1;
+    int32 length = 2;
+}
+
+message SendFileResponse {
+    int32 length = 1;
+    string block_id = 2; 
 }
