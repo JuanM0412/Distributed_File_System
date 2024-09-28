@@ -37,7 +37,7 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         os.makedirs(user_dir, exist_ok=True) 
 
         # Change this to the user's directory
-        file_dir = '/home/juan/University/Tópicos_en_Telemática/Distributed_File_System/src/data_node/storage/JuanM0412'
+        file_dir = r'C:\Users\Sebastian\Downloads'
         print('File dir:', file_dir)
         os.makedirs(file_dir, exist_ok=True)  
 
