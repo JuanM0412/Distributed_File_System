@@ -128,11 +128,14 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                 
         metadata_ = database.metaData.find({'Name': file, 'Owner': username})
         
-        
         response = name_node_pb2.DataNodesResponse()
         
         for metadata in metadata_:
-            for block in metadata['Blocks']:
+            for block_id in metadata['Blocks']:
+                block = database.blocks.find_one({'_id': block_id})
+                if not block:
+                    continue
+
                 master_node = database.dataNodes.find_one({'_id': block['Master']})
                 if master_node:
                     data_node_info = name_node_pb2.DataNodeInfo(

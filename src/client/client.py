@@ -54,7 +54,7 @@ class Client:
     def GetDataNode(self, data_node):
         return data_node.ip, data_node.port
 
-    def UploadFile(self, filename_: str):
+    def UploadFile(self, virtual_path: str, filename_: str):
         file_size = int(GetFileSize(filename_))
         
         blocks = list(SplitFile(filename_))
@@ -70,7 +70,7 @@ class Client:
             block_size_MB = block_size_bytes / MB_IN_BYTES
 
             request = name_node_pb2.DataNodesUploadRequest(
-                file=filename_,
+                file=virtual_path,
                 size=block_size_MB,
                 username=self.username,
             )
@@ -85,7 +85,7 @@ class Client:
             
             block_chunk = data_node_pb2.BlockChunk(
                 block_data= block_data, 
-                filename= filename_,  
+                filename= virtual_path,  
                 block_number= i,
                 username=self.username
             )  
@@ -149,3 +149,43 @@ class Client:
 
     def GetFileManager(self):
         return self.file_manager
+
+    def DeleteFile(self, virtual_path: str):
+        # Request DataNodes that store the file
+        response = self.server_stub.GetDataNodesForDownload(
+            name_node_pb2.DataNodesDownloadRequest(
+                file=virtual_path,
+                username=self.username
+            )
+        )
+
+        print("Successfully requested data nodes for deletion")
+
+        if not response.nodes:
+            raise Exception(f"No available nodes to delete file {virtual_path}")
+
+        options = [
+            ('grpc.max_send_message_length', 1*1024 * 1024 * 1024),  
+            ('grpc.max_receive_message_length', 1*1024 * 1024 * 1024),  
+        ]
+
+        for node in response.nodes:
+            data_node_channel = grpc.insecure_channel(f'{node.ip}:{node.port}', options=options)
+            data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
+            
+            try:
+                delete_response = data_node_stub.DeleteFile(
+                    data_node_pb2.DeleteFileRequest(
+                        filename=virtual_path,
+                        username=self.username
+                    )
+                )
+                if delete_response.status != "Success":
+                    print(f"Failed to delete file from node {node.id}")
+            except Exception as e:
+                print(f"Error deleting from node {node.id}: {str(e)}")
+                print(f"Error type: {type(e)}")
+                continue
+        
+        print(f'File {virtual_path} deletion complete')
+

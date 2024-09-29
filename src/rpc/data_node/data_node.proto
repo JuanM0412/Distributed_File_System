@@ -6,6 +6,7 @@ service DataNode {
     rpc SendFile(BlockChunk) returns (SendFileResponse);
     rpc GetFile(GetFileRequest) returns (stream BlockChunk);
     rpc StoreBlockID(BlockIDRequest) returns (Reply);
+    rpc DeleteFile(DeleteFileRequest) returns (Reply); // Añadido
 }
 
 message BlockChunk {
@@ -36,4 +37,8 @@ message BlockIDResponse {
 message SendFileResponse {
     int32 length = 1;
     string block_id = 2; 
+}
+
+message DeleteFileRequest { // Añadido
+    string filename = 1;
 }
