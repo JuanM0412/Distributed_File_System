@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"Z\n\nBlockChunk\x12\x12\n\nblock_data\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x14\n\x0c\x62lock_number\x18\x03 \x01(\x05\x12\x10\n\x08username\x18\x04 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"4\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\"$\n\x0fGetFileResponse\x12\x11\n\tfile_data\x18\x01 \x01(\x0c\"3\n\x0e\x42lockIDRequest\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\t\x12\x0f\n\x07node_id\x18\x02 \x01(\t\"3\n\x0f\x42lockIDResponse\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\t\x12\x0e\n\x06length\x18\x02 \x01(\x05\"4\n\x10SendFileResponse\x12\x0e\n\x06length\x18\x01 \x01(\x05\x12\x10\n\x08\x62lock_id\x18\x02 \x01(\t\"%\n\x11\x44\x65leteFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t2\x87\x02\n\x08\x44\x61taNode\x12>\n\x08SendFile\x12\x15.data_node.BlockChunk\x1a\x1b.data_node.SendFileResponse\x12@\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x1a.data_node.GetFileResponse\x12;\n\x0cStoreBlockID\x12\x19.data_node.BlockIDRequest\x1a\x10.data_node.Reply\x12<\n\nDeleteFile\x12\x1c.data_node.DeleteFileRequest\x1a\x10.data_node.Replyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"Z\n\nBlockChunk\x12\x12\n\nblock_data\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x14\n\x0c\x62lock_number\x18\x03 \x01(\x05\x12\x10\n\x08username\x18\x04 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"4\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\"$\n\x0fGetFileResponse\x12\x11\n\tfile_data\x18\x01 \x01(\x0c\"3\n\x0e\x42lockIDRequest\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\t\x12\x0f\n\x07node_id\x18\x02 \x01(\t\"3\n\x0f\x42lockIDResponse\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\t\x12\x0e\n\x06length\x18\x02 \x01(\x05\"4\n\x10SendFileResponse\x12\x0e\n\x06length\x18\x01 \x01(\x05\x12\x10\n\x08\x62lock_id\x18\x02 \x01(\t\"7\n\x11\x44\x65leteFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\"%\n\x12\x44\x65leteFileResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x94\x02\n\x08\x44\x61taNode\x12>\n\x08SendFile\x12\x15.data_node.BlockChunk\x1a\x1b.data_node.SendFileResponse\x12@\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x1a.data_node.GetFileResponse\x12;\n\x0cStoreBlockID\x12\x19.data_node.BlockIDRequest\x1a\x10.data_node.Reply\x12I\n\nDeleteFile\x12\x1c.data_node.DeleteFileRequest\x1a\x1d.data_node.DeleteFileResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -46,7 +46,9 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SENDFILERESPONSE']._serialized_start=345
   _globals['_SENDFILERESPONSE']._serialized_end=397
   _globals['_DELETEFILEREQUEST']._serialized_start=399
-  _globals['_DELETEFILEREQUEST']._serialized_end=436
-  _globals['_DATANODE']._serialized_start=439
-  _globals['_DATANODE']._serialized_end=702
+  _globals['_DELETEFILEREQUEST']._serialized_end=454
+  _globals['_DELETEFILERESPONSE']._serialized_start=456
+  _globals['_DELETEFILERESPONSE']._serialized_end=493
+  _globals['_DATANODE']._serialized_start=496
+  _globals['_DATANODE']._serialized_end=772
 # @@protoc_insertion_point(module_scope)

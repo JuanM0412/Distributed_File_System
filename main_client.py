@@ -46,7 +46,9 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     client = Client(CLIENT_IP, CLIENT_PORT, SERVER_IP, SERVER_PORT)
     print('Calling Register method...')
-    client.Register(username='luisa', password='123')
+    client.Register(username='sebas', password='123')
     input('Press Enter to continue...')
-    #client.UploadFile('/VID_20231023_120541.mp4',r'C:\Users\Luisa\Downloads\temp\VID_20231023_120541.mp4')
-    client.DownloadFile('/VID_20231023_120541.mp4')
+    
+    #client.UploadFile('/large_data.json',r'C:\Users\Sebastian\Downloads\large_data.json')
+    #client.DownloadFile('/large_data.json')
+    client.DeleteFile('/large_data.json')

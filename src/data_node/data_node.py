@@ -37,7 +37,7 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         user_dir = os.path.join(storage_base_dir, request.username)
         os.makedirs(user_dir, exist_ok=True) 
 
-        file_dir = r'C:\Users\Luisa\Downloads'
+        file_dir = r'C:\Users\Sebastian\Downloads'
         print('File dir:', file_dir)
         os.makedirs(file_dir, exist_ok=True)  
 
@@ -57,17 +57,20 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         return data_node_pb2.Reply(length=file_size)    
 
     def GetFile(self, request, context):
-        path = r'C:\Users\Luisa\Downloads\temp'
+        path = r'C:\Users\Sebastian\Downloads'
+        print("Path in sendfile:", request.filename)
         filename = os.path.join(path, request.filename)
+
+        print("Contenido del directorio Downloads:")
+        for item in os.listdir(path):
+            print(item)
         
         if not os.path.exists(filename):
             context.abort(
                 grpc.StatusCode.NOT_FOUND,
                 f"File {request.filename} not found")
 
-        file_data = b''
-        for chunk in GetFileChunks(filename):
-            file_data += chunk.block_data
+        file_data = b''.join(GetFileChunks(filename))
 
         return data_node_pb2.GetFileResponse(file_data=file_data)
 
@@ -90,3 +93,25 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
                     self.capacity_MB)))
         self.id = response.id
         print(f'Registered with id: {self.id}')
+
+    def DeleteFile(self, request, context):
+        path = r'C:\Users\Sebastian\Downloads'
+        print("Path in sendfile:", request.filename)
+        filename = os.path.join(path, request.filename)
+
+        print("Contenido del directorio Downloads:")
+        for item in os.listdir(path):
+            print(item)
+        
+        if not os.path.exists(filename):
+            context.abort(
+                grpc.StatusCode.NOT_FOUND,
+                f"File {request.filename} not found")
+
+        try:
+            os.remove(filename)
+            print(f"File {request.filename} deleted successfully")
+            return data_node_pb2.DeleteFileResponse(success=True)
+        except Exception as e:
+            print("Continue")
+            

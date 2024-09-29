@@ -3,12 +3,15 @@ from config import MB_IN_BYTES
 import os
 
 def GetFileChunks(file_path):
+    print("File path in UTILS:", file_path)
+    chunks = []
     with open(file_path, 'rb') as f:
         while True:
-            chunk = f.read(MB_IN_BYTES)
+            chunk = f.read()
             if not chunk:
                 break
-            yield chunk
+            chunks.append(chunk)
+    return chunks
 
 
 def SaveChunksToFile(chunks, filename):

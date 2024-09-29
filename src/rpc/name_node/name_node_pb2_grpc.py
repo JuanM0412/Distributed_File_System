@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from . import name_node_pb2 as name__node__pb2
+from .import name_node_pb2 as name__node__pb2
 
 GRPC_GENERATED_VERSION = '1.66.1'
 GRPC_VERSION = grpc.__version__
@@ -49,6 +49,11 @@ class NameNodeServiceStub(object):
                 request_serializer=name__node__pb2.DataNodesDownloadRequest.SerializeToString,
                 response_deserializer=name__node__pb2.DataNodesDownloadResponse.FromString,
                 _registered_method=True)
+        self.GetDataNodesForRemove = channel.unary_unary(
+                '/nameNode.NameNodeService/GetDataNodesForRemove',
+                request_serializer=name__node__pb2.DataNodesRemoveRequest.SerializeToString,
+                response_deserializer=name__node__pb2.DataNodesRemoveResponse.FromString,
+                _registered_method=True)
         self.AddUser = channel.unary_unary(
                 '/nameNode.NameNodeService/AddUser',
                 request_serializer=name__node__pb2.AddUserRequest.SerializeToString,
@@ -78,6 +83,12 @@ class NameNodeServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetDataNodesForDownload(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetDataNodesForRemove(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -113,6 +124,11 @@ def add_NameNodeServiceServicer_to_server(servicer, server):
                     servicer.GetDataNodesForDownload,
                     request_deserializer=name__node__pb2.DataNodesDownloadRequest.FromString,
                     response_serializer=name__node__pb2.DataNodesDownloadResponse.SerializeToString,
+            ),
+            'GetDataNodesForRemove': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDataNodesForRemove,
+                    request_deserializer=name__node__pb2.DataNodesRemoveRequest.FromString,
+                    response_serializer=name__node__pb2.DataNodesRemoveResponse.SerializeToString,
             ),
             'AddUser': grpc.unary_unary_rpc_method_handler(
                     servicer.AddUser,
@@ -206,6 +222,33 @@ class NameNodeService(object):
             '/nameNode.NameNodeService/GetDataNodesForDownload',
             name__node__pb2.DataNodesDownloadRequest.SerializeToString,
             name__node__pb2.DataNodesDownloadResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetDataNodesForRemove(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/nameNode.NameNodeService/GetDataNodesForRemove',
+            name__node__pb2.DataNodesRemoveRequest.SerializeToString,
+            name__node__pb2.DataNodesRemoveResponse.FromString,
             options,
             channel_credentials,
             insecure,

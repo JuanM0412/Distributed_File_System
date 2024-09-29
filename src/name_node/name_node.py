@@ -8,6 +8,7 @@ from src.models.namenode import Block, MetaData
 from src.models.user import User
 from bson import ObjectId
 from config.db import database
+from google.protobuf.json_format import MessageToDict, MessageToJson
 
 class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     def __init__(self, ip: str, port: int):
@@ -163,7 +164,68 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                 response.blocks[i] = str(id_selected_node)  # Updated
                 i += 1
 
+        print(f"Response: {len(response.blocks)}")
         return response
+    
+    def GetDataNodesForRemove(self, request, context):
+        file = request.file
+        username = request.username
+        print(f"File: {file}")
+        print(f"Username: {username}")
+                
+        metadata_ = database.metaData.find({'Name': file, 'Owner': username})
+        response = name_node_pb2.DataNodesRemoveResponse()  
+
+        metadata_list = list(metadata_)
+
+        for metadata in metadata_list:
+            blocks_list = metadata['Blocks']
+            print(f"Blocks list: {blocks_list}")
+
+            for block_id in blocks_list:
+
+                if isinstance(block_id, str):
+                    block_id = ObjectId(block_id)
+
+                block = database.blocks.find_one({'_id': block_id})
+                if not block:
+                    print(f"Block {block_id} not found")
+                    continue
+                
+                block_info = name_node_pb2.BlockInfo()
+
+                master_id = block['Master']
+                master_node = database.dataNodes.find_one({'_id': ObjectId(master_id)})
+
+                # Convert master_node to gRPC message object
+                master_node_info = name_node_pb2.DataNodeInfo(
+                    id=str(master_node['_id']),
+                    ip=master_node['Ip'],
+                    port=master_node['Port'],
+                    capacity_MB=master_node['CapacityMB']
+                )
+                block_info.nodes.append(master_node_info)
+                
+                for slave_id in block['Slaves']:
+                    slave_node = database.dataNodes.find_one({'_id': ObjectId(slave_id)})
+                    
+                    # Convert slave_node to gRPC message object
+                    slave_node_info = name_node_pb2.DataNodeInfo(
+                        id=str(slave_node['_id']),
+                        ip=slave_node['Ip'],
+                        port=slave_node['Port'],
+                        capacity_MB=slave_node['CapacityMB']
+                    )
+                    block_info.nodes.append(slave_node_info)
+
+                response.blocks.append(block_info)
+
+        print(f"Response: {len(response.blocks)}")
+    
+    
+        return response
+        
+
 
     def AddUser(self, request, context):
         # Extract the info about the user.
