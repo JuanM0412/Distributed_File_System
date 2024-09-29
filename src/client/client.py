@@ -124,7 +124,12 @@ class Client:
             data_node_channel = grpc.insecure_channel(f'{data_node['Ip']}:{data_node['Port']}', options=options)
             data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
             
+            filename_name = filename.split('.')[0]
+            filename_extension = filename.split('.')[1]
+            filename = filename_name+'_block_'+str(i+1)+'.'+filename_extension
+            print(filename)
             try:
+                print(filename)
                 response = data_node_stub.GetFile(
                     data_node_pb2.GetFileRequest(
                         filename=filename,

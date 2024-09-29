@@ -57,7 +57,9 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         return data_node_pb2.Reply(length=file_size)    
 
     def GetFile(self, request, context):
-        filename = os.path.join(self.dir, request.filename)
+        path = r'C:\Users\Luisa\Downloads\temp'
+        filename = os.path.join(path, request.filename)
+        
         if not os.path.exists(filename):
             context.abort(
                 grpc.StatusCode.NOT_FOUND,
