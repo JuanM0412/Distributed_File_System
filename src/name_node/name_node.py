@@ -1,14 +1,12 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
-
 import grpc
 import json
 from concurrent import futures
 import random
-
 from src.models.datanode import DataNode
 from src.models.namenode import Block, MetaData
 from src.models.user import User
-
+from bson import ObjectId
 from config.db import database
 
 class Server(name_node_pb2_grpc.NameNodeServiceServicer):
@@ -125,40 +123,47 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     def GetDataNodesForDownload(self, request, context):
         file = request.file
         username = request.username
+        print(f"File: {file}")
+        print(f"Username: {username}")
                 
         metadata_ = database.metaData.find({'Name': file, 'Owner': username})
-        
-        response = name_node_pb2.DataNodesResponse()
-        
-        for metadata in metadata_:
-            for block_id in metadata['Blocks']:
+        response = name_node_pb2.DataNodesDownloadResponse()  # Updated
+
+        metadata_list = list(metadata_)
+
+        for metadata in metadata_list:
+            blocks_list = metadata['Blocks']
+            print(f"Blocks list: {blocks_list}")
+
+            i = 0
+            for block_id in blocks_list:
+
+                if isinstance(block_id, str):
+                    block_id = ObjectId(block_id)
+
                 block = database.blocks.find_one({'_id': block_id})
                 if not block:
+                    print(f"Block {block_id} not found")
                     continue
+                
+                blocks = []
 
-                master_node = database.dataNodes.find_one({'_id': block['Master']})
-                if master_node:
-                    data_node_info = name_node_pb2.DataNodeInfo(
-                        id=str(master_node['_id']),
-                        ip=master_node['Ip'],
-                        port=master_node['Port'],
-                        capacity_MB=master_node['CapacityMB']
-                    )
-                    response.nodes.append(data_node_info)
+                master_id = block['Master']
+                master_node = database.dataNodes.find_one({'_id': ObjectId(master_id)})
+
+                blocks.append(master_node)
                 
                 for slave_id in block['Slaves']:
-                    slave_node = database.dataNodes.find_one({'_id': slave_id})
-                    if slave_node:
-                        data_node_info = name_node_pb2.DataNodeInfo(
-                            id=str(slave_node['_id']),
-                            ip=slave_node['Ip'],
-                            port=slave_node['Port'],
-                            capacity_MB=slave_node['CapacityMB']
-                        )
-                        response.nodes.append(data_node_info)
-        
-        return response
+                    slave_node = database.dataNodes.find_one({'_id': ObjectId(slave_id)})
+                    blocks.append(slave_node)
 
+                position = random.randint(0, len(blocks) - 1)
+                id_selected_node = blocks[position]['_id']
+
+                response.blocks[i] = str(id_selected_node)  # Updated
+                i += 1
+
+        return response
 
     def AddUser(self, request, context):
         # Extract the info about the user.

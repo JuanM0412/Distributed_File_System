@@ -47,7 +47,7 @@ class NameNodeServiceStub(object):
         self.GetDataNodesForDownload = channel.unary_unary(
                 '/nameNode.NameNodeService/GetDataNodesForDownload',
                 request_serializer=name__node__pb2.DataNodesDownloadRequest.SerializeToString,
-                response_deserializer=name__node__pb2.DataNodesResponse.FromString,
+                response_deserializer=name__node__pb2.DataNodesDownloadResponse.FromString,
                 _registered_method=True)
         self.AddUser = channel.unary_unary(
                 '/nameNode.NameNodeService/AddUser',
@@ -112,7 +112,7 @@ def add_NameNodeServiceServicer_to_server(servicer, server):
             'GetDataNodesForDownload': grpc.unary_unary_rpc_method_handler(
                     servicer.GetDataNodesForDownload,
                     request_deserializer=name__node__pb2.DataNodesDownloadRequest.FromString,
-                    response_serializer=name__node__pb2.DataNodesResponse.SerializeToString,
+                    response_serializer=name__node__pb2.DataNodesDownloadResponse.SerializeToString,
             ),
             'AddUser': grpc.unary_unary_rpc_method_handler(
                     servicer.AddUser,
@@ -205,7 +205,7 @@ class NameNodeService(object):
             target,
             '/nameNode.NameNodeService/GetDataNodesForDownload',
             name__node__pb2.DataNodesDownloadRequest.SerializeToString,
-            name__node__pb2.DataNodesResponse.FromString,
+            name__node__pb2.DataNodesDownloadResponse.FromString,
             options,
             channel_credentials,
             insecure,

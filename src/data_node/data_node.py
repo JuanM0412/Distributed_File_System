@@ -37,12 +37,11 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         user_dir = os.path.join(storage_base_dir, request.username)
         os.makedirs(user_dir, exist_ok=True) 
 
-        # Change this to the user's directory
-        file_dir = r'C:\Users\Sebastian\Downloads'
+        file_dir = r'C:\Users\Luisa\Downloads'
         print('File dir:', file_dir)
         os.makedirs(file_dir, exist_ok=True)  
 
-        block_file_name = f"block_{request.block_number}"
+        block_file_name = f"{request.filename}_{request.block_number}"
         block_file_path = os.path.join(file_dir, block_file_name)
 
         with open(block_file_path, 'wb') as f:
@@ -64,8 +63,11 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
                 grpc.StatusCode.NOT_FOUND,
                 f"File {request.filename} not found")
 
+        file_data = b''
         for chunk in GetFileChunks(filename):
-            yield chunk
+            file_data += chunk.block_data
+
+        return data_node_pb2.GetFileResponse(file_data=file_data)
 
     def StartServer(self):
         options = [

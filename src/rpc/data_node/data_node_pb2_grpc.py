@@ -39,10 +39,10 @@ class DataNodeStub(object):
                 request_serializer=data__node__pb2.BlockChunk.SerializeToString,
                 response_deserializer=data__node__pb2.SendFileResponse.FromString,
                 _registered_method=True)
-        self.GetFile = channel.unary_stream(
+        self.GetFile = channel.unary_unary(
                 '/data_node.DataNode/GetFile',
                 request_serializer=data__node__pb2.GetFileRequest.SerializeToString,
-                response_deserializer=data__node__pb2.BlockChunk.FromString,
+                response_deserializer=data__node__pb2.GetFileResponse.FromString,
                 _registered_method=True)
         self.StoreBlockID = channel.unary_unary(
                 '/data_node.DataNode/StoreBlockID',
@@ -78,8 +78,7 @@ class DataNodeServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def DeleteFile(self, request, context):
-        """Añadido
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -92,10 +91,10 @@ def add_DataNodeServicer_to_server(servicer, server):
                     request_deserializer=data__node__pb2.BlockChunk.FromString,
                     response_serializer=data__node__pb2.SendFileResponse.SerializeToString,
             ),
-            'GetFile': grpc.unary_stream_rpc_method_handler(
+            'GetFile': grpc.unary_unary_rpc_method_handler(
                     servicer.GetFile,
                     request_deserializer=data__node__pb2.GetFileRequest.FromString,
-                    response_serializer=data__node__pb2.BlockChunk.SerializeToString,
+                    response_serializer=data__node__pb2.GetFileResponse.SerializeToString,
             ),
             'StoreBlockID': grpc.unary_unary_rpc_method_handler(
                     servicer.StoreBlockID,
@@ -156,12 +155,12 @@ class DataNode(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(
+        return grpc.experimental.unary_unary(
             request,
             target,
             '/data_node.DataNode/GetFile',
             data__node__pb2.GetFileRequest.SerializeToString,
-            data__node__pb2.BlockChunk.FromString,
+            data__node__pb2.GetFileResponse.FromString,
             options,
             channel_credentials,
             insecure,

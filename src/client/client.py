@@ -7,6 +7,7 @@ from config import MB_IN_BYTES
 import grpc, os
 from src.file_manager.file_manager import FileManager
 import random
+from bson import ObjectId
 
 class Client:
     def __init__(self, ip: str, port: int, server_ip: str, server_port: int):
@@ -49,7 +50,8 @@ class Client:
                 username=self.username
             )
         )
-        return response.nodes
+
+        return response.blocks 
 
     def GetDataNode(self, data_node):
         return data_node.ip, data_node.port
@@ -104,27 +106,41 @@ class Client:
         print(f'File {filename_} upload complete')
 
     def DownloadFile(self, filename: str):
-        print(f'Downloading file {filename}')
         data_nodes = self.GetDataNodesForDownload(filename)
-        print("BUENAS TARDES")
+        
+        options = [
+            ('grpc.max_send_message_length', 1*1024 * 1024 * 1024),  
+            ('grpc.max_receive_message_length', 1*1024 * 1024 * 1024),  
+        ]
+
+        file_data = b''
         print(data_nodes)
-        node_position = random.randint(0, len(data_nodes) - 1)
-        data_node = data_nodes[node_position]
-        data_node_ip = data_node.ip
-        data_node_port = data_node.port
-        print(f'{data_node_ip}:{data_node_port}')
+        data_nodes = dict(sorted(data_nodes.items()))
+        for node in data_nodes:
+            print(f'Downloading from node {node}')
+            print(data_nodes[node])
+            data_node = database.dataNodes.find_one({'_id': ObjectId(data_nodes[node])})
+            print(data_node)
+            data_node_channel = grpc.insecure_channel(f'{data_node['Ip']}:{data_node['Port']}', options=options)
+            data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
+            
+            try:
+                response = data_node_stub.GetFile(
+                    data_node_pb2.GetFileRequest(
+                        filename=filename,
+                        username=self.username
+                    )
+                )
+                file_data += response.file_data
+            except Exception as e:
+                print(f"Error downloading from node {node['_id']}: {str(e)}")
+                print(f"Error type: {type(e)}")
+                continue
 
-        data_node_channel = grpc.insecure_channel(f'{data_node_ip}:{data_node_port}')
-        data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
-
-        response = data_node_stub.GetFile(
-            data_node_pb2.GetFileRequest(
-                filename=filename
-            )
-        )
-
-        SaveChunksToFile(response, filename)
-
+        with open(filename, 'wb') as f:
+            f.write(file_data)
+        
+        print(f'File {filename} download complete')
 
     def Register(self, username: str, password: str):
         response = self.server_stub.AddUser(
