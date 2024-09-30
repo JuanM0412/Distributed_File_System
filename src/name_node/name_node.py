@@ -19,12 +19,10 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
         self.data_nodes_connections = {}
 
     def Register(self, request, context):
-        # Extract the info about the dataNode.
         ip = request.ip
         port = request.port
         capacity_MB = request.capacity_MB
 
-        # Instance of the model
         data_node_info = DataNode(
             Ip=ip,
             Port=port,
@@ -33,7 +31,6 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
             Blocks=[])
         print('data:', data_node_info.model_dump())
 
-        # Add the dataNode in the DB
         print('After insert')
         data_node = database.dataNodes.insert_one(data_node_info.model_dump())
         print('data_node:', data_node.inserted_id)
@@ -122,23 +119,36 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     def GetDataNodesForDownload(self, request, context):
         file = request.file
         username = request.username
-        data_nodes = list(database.dataNodes.find())
 
+        metadata = database.metaData.find_one({'Name': file, 'Owner': username})
+        
         response = name_node_pb2.DataNodesResponse()
-        for data_node in data_nodes:
-            data_node_info = name_node_pb2.DataNodeInfo(
-                id=str(
-                    data_node['_id']), ip=str(
-                    data_node['ip']), port=str(
-                    data_node['port']), capacity_MB=data_node['storage'])
-            response.nodes.append(data_node_info)
-            # This break will be in this for while we realize how choose in
-            # which datanodes we are going to save a file. For the same reason
-            # I asked for the filename. In this way, we are going to add the
-            # files just in the first data_node, then it will be different
-            break
-
+        
+        if metadata:
+            for block in metadata['Blocks']:
+                master_node = database.dataNodes.find_one({'_id': block['Master']})
+                if master_node:
+                    data_node_info = name_node_pb2.DataNodeInfo(
+                        id=str(master_node['_id']),
+                        ip=master_node['Ip'],
+                        port=master_node['Port'],
+                        capacity_MB=master_node['CapacityMB']
+                    )
+                    response.nodes.append(data_node_info)
+                
+                for slave_id in block['Slaves']:
+                    slave_node = database.dataNodes.find_one({'_id': slave_id})
+                    if slave_node:
+                        data_node_info = name_node_pb2.DataNodeInfo(
+                            id=str(slave_node['_id']),
+                            ip=slave_node['Ip'],
+                            port=slave_node['Port'],
+                            capacity_MB=slave_node['CapacityMB']
+                        )
+                        response.nodes.append(data_node_info)
+        
         return response
+
 
     def AddUser(self, request, context):
         # Extract the info about the user.

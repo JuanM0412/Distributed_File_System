@@ -31,27 +31,29 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
     def SendFile(self, request, context):
         current_dir = os.path.dirname(os.path.abspath(__file__)) 
         
-        storage_base_dir = os.path.join(current_dir,'storage')
+        storage_base_dir = os.path.join(current_dir, 'storage')
 
         user_dir = os.path.join(storage_base_dir, request.username)
         os.makedirs(user_dir, exist_ok=True) 
 
-        file_dir = os.path.join(user_dir, request.filename)
+        # Change this to the user's directory
+        file_dir = '/home/juan/University/Tópicos_en_Telemática/Distributed_File_System/src/data_node/storage/JuanM0412'
+        print('File dir:', file_dir)
         os.makedirs(file_dir, exist_ok=True)  
 
-        chunk_file_name = f"chunk_{request.chunk_number}"
-        chunk_file_path = os.path.join(file_dir, chunk_file_name)
+        block_file_name = f"block_{request.block_number}"
+        block_file_path = os.path.join(file_dir, block_file_name)
 
-        with open(chunk_file_path, 'wb') as f:
-            f.write(request.chunk_data)
+        with open(block_file_path, 'wb') as f:
+            f.write(request.block_data)
 
-        chunk_size_MB = len(request.chunk_data) / MB_IN_BYTES
-        print(f"Received chunk {request.chunk_number} of size {chunk_size_MB} MB")
+        block_size_MB = len(request.block_data) / MB_IN_BYTES
+        print(f"Received block {request.block_number} of size {block_size_MB} MB")
         print(f"Capacity before: {self.capacity_MB} MB")
-        self.capacity_MB -= chunk_size_MB
+        self.capacity_MB -= block_size_MB
         print(f"Capacity after: {self.capacity_MB} MB")
         
-        file_size = os.path.getsize(chunk_file_path)
+        file_size = os.path.getsize(block_file_path)
         return data_node_pb2.Reply(length=file_size)
 
     def GetFile(self, request, context):
@@ -65,7 +67,11 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
             yield chunk
 
     def StartServer(self):
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        options = [
+            ('grpc.max_send_message_length', 200 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 200 * 1024 * 1024),
+        ]
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),options=options)
         data_node_pb2_grpc.add_DataNodeServicer_to_server(self, server)
         server.add_insecure_port(f'{self.ip}:{self.port}')
         server.start()

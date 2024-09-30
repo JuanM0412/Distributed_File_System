@@ -36,13 +36,13 @@ class DataNodeStub(object):
         """
         self.SendFile = channel.unary_unary(
                 '/data_node.DataNode/SendFile',
-                request_serializer=data__node__pb2.FileChunk.SerializeToString,
+                request_serializer=data__node__pb2.BlockChunk.SerializeToString,
                 response_deserializer=data__node__pb2.Reply.FromString,
                 _registered_method=True)
         self.GetFile = channel.unary_stream(
                 '/data_node.DataNode/GetFile',
                 request_serializer=data__node__pb2.GetFileRequest.SerializeToString,
-                response_deserializer=data__node__pb2.FileChunk.FromString,
+                response_deserializer=data__node__pb2.BlockChunk.FromString,
                 _registered_method=True)
         self.Heartbeat = channel.unary_unary(
                 '/data_node.DataNode/Heartbeat',
@@ -77,13 +77,13 @@ def add_DataNodeServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendFile': grpc.unary_unary_rpc_method_handler(
                     servicer.SendFile,
-                    request_deserializer=data__node__pb2.FileChunk.FromString,
+                    request_deserializer=data__node__pb2.BlockChunk.FromString,
                     response_serializer=data__node__pb2.Reply.SerializeToString,
             ),
             'GetFile': grpc.unary_stream_rpc_method_handler(
                     servicer.GetFile,
                     request_deserializer=data__node__pb2.GetFileRequest.FromString,
-                    response_serializer=data__node__pb2.FileChunk.SerializeToString,
+                    response_serializer=data__node__pb2.BlockChunk.SerializeToString,
             ),
             'Heartbeat': grpc.unary_unary_rpc_method_handler(
                     servicer.Heartbeat,
@@ -116,7 +116,7 @@ class DataNode(object):
             request,
             target,
             '/data_node.DataNode/SendFile',
-            data__node__pb2.FileChunk.SerializeToString,
+            data__node__pb2.BlockChunk.SerializeToString,
             data__node__pb2.Reply.FromString,
             options,
             channel_credentials,
@@ -144,7 +144,7 @@ class DataNode(object):
             target,
             '/data_node.DataNode/GetFile',
             data__node__pb2.GetFileRequest.SerializeToString,
-            data__node__pb2.FileChunk.FromString,
+            data__node__pb2.BlockChunk.FromString,
             options,
             channel_credentials,
             insecure,
