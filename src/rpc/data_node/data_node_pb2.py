@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"o\n\tFileChunk\x12\x12\n\nchunk_data\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x14\n\x0c\x63hunk_number\x18\x03 \x01(\x05\x12\x14\n\x0ctotal_chunks\x18\x04 \x01(\x05\x12\x10\n\x08username\x18\x05 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\"\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t2|\n\x08\x44\x61taNode\x12\x32\n\x08SendFile\x12\x14.data_node.FileChunk\x1a\x10.data_node.Reply\x12<\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x14.data_node.FileChunk0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"p\n\nBlockChunk\x12\x12\n\nblock_data\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x14\n\x0c\x62lock_number\x18\x03 \x01(\x05\x12\x14\n\x0ctotal_blocks\x18\x04 \x01(\x05\x12\x10\n\x08username\x18\x05 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\"\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"\x12\n\x10HeartbeatRequest\"#\n\x11HeartbeatResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xc6\x01\n\x08\x44\x61taNode\x12\x33\n\x08SendFile\x12\x15.data_node.BlockChunk\x1a\x10.data_node.Reply\x12=\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x15.data_node.BlockChunk0\x01\x12\x46\n\tHeartbeat\x12\x1b.data_node.HeartbeatRequest\x1a\x1c.data_node.HeartbeatResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -37,10 +37,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_REPLY']._serialized_end=167
   _globals['_GETFILEREQUEST']._serialized_start=169
   _globals['_GETFILEREQUEST']._serialized_end=203
-  _globals['_HEARTBEATREQUEST']._serialized_start=204
-  _globals['_HEARTBEATREQUEST']._serialized_end=222
-  _globals['_HEARTBEATRESPONSE']._serialized_start=224
-  _globals['_HEARTBEATRESPONSE']._serialized_end=259
-  _globals['_DATANODE']._serialized_start=262
-  _globals['_DATANODE']._serialized_end=458
+  _globals['_HEARTBEATREQUEST']._serialized_start=205
+  _globals['_HEARTBEATREQUEST']._serialized_end=223
+  _globals['_HEARTBEATRESPONSE']._serialized_start=225
+  _globals['_HEARTBEATRESPONSE']._serialized_end=260
+  _globals['_DATANODE']._serialized_start=263
+  _globals['_DATANODE']._serialized_end=461
 # @@protoc_insertion_point(module_scope)
