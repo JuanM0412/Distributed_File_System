@@ -6,7 +6,8 @@ service NameNodeService {
   // DataNodes
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc GetDataNodesForUpload (DataNodesUploadRequest) returns (DataNodesResponse);
-  rpc GetDataNodesForDownload (DataNodesDownloadRequest) returns (DataNodesResponse);
+  rpc GetDataNodesForDownload (DataNodesDownloadRequest) returns (DataNodesDownloadResponse);
+  rpc GetDataNodesForRemove (DataNodesRemoveRequest) returns (DataNodesRemoveResponse);
 
   // Users
   rpc AddUser (AddUserRequest) returns (AddUserResponse);
@@ -31,6 +32,7 @@ message DataNodesUploadRequest {
 
 message DataNodesResponse {
   repeated DataNodeInfo nodes = 1;
+  string block_id = 2; 
 }
 
 message DataNodeInfo {
@@ -62,3 +64,26 @@ message DataNodesDownloadRequest {
   string file = 1;
   string username = 2;
 }
+
+message DataNodesDownloadResponse {
+  map<int32, string> blocks = 1;
+}
+
+message DataNodesRemoveRequest {
+  string file = 1;
+  string username = 2;
+}
+
+message DataNodesRemoveResponse {
+  repeated BlockInfo blocks = 1;
+}
+
+message BlockInfo {
+  repeated DataNodeInfo nodes = 1;
+}
+
+message BlockList {
+  repeated string block_ids = 1;
+}
+
+

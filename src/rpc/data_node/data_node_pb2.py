@@ -22,25 +22,31 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"p\n\nBlockChunk\x12\x12\n\nblock_data\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x14\n\x0c\x62lock_number\x18\x03 \x01(\x05\x12\x14\n\x0ctotal_blocks\x18\x04 \x01(\x05\x12\x10\n\x08username\x18\x05 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\"\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"\x12\n\x10HeartbeatRequest\"#\n\x11HeartbeatResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xc6\x01\n\x08\x44\x61taNode\x12\x33\n\x08SendFile\x12\x15.data_node.BlockChunk\x1a\x10.data_node.Reply\x12=\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x15.data_node.BlockChunk0\x01\x12\x46\n\tHeartbeat\x12\x1b.data_node.HeartbeatRequest\x1a\x1c.data_node.HeartbeatResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x64\x61ta_node.proto\x12\tdata_node\"Z\n\nBlockChunk\x12\x12\n\nblock_data\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x14\n\x0c\x62lock_number\x18\x03 \x01(\x05\x12\x10\n\x08username\x18\x04 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"4\n\x0eGetFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\"$\n\x0fGetFileResponse\x12\x11\n\tfile_data\x18\x01 \x01(\x0c\"3\n\x0e\x42lockIDRequest\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\t\x12\x0f\n\x07node_id\x18\x02 \x01(\t\"3\n\x0f\x42lockIDResponse\x12\x10\n\x08\x62lock_id\x18\x01 \x01(\t\x12\x0e\n\x06length\x18\x02 \x01(\x05\"4\n\x10SendFileResponse\x12\x0e\n\x06length\x18\x01 \x01(\x05\x12\x10\n\x08\x62lock_id\x18\x02 \x01(\t\"7\n\x11\x44\x65leteFileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\"%\n\x12\x44\x65leteFileResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x94\x02\n\x08\x44\x61taNode\x12>\n\x08SendFile\x12\x15.data_node.BlockChunk\x1a\x1b.data_node.SendFileResponse\x12@\n\x07GetFile\x12\x19.data_node.GetFileRequest\x1a\x1a.data_node.GetFileResponse\x12;\n\x0cStoreBlockID\x12\x19.data_node.BlockIDRequest\x1a\x10.data_node.Reply\x12I\n\nDeleteFile\x12\x1c.data_node.DeleteFileRequest\x1a\x1d.data_node.DeleteFileResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'data_node_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
-  _globals['_BLOCKCHUNK']._serialized_start=30
-  _globals['_BLOCKCHUNK']._serialized_end=142
-  _globals['_REPLY']._serialized_start=144
-  _globals['_REPLY']._serialized_end=167
-  _globals['_GETFILEREQUEST']._serialized_start=169
-  _globals['_GETFILEREQUEST']._serialized_end=203
-  _globals['_HEARTBEATREQUEST']._serialized_start=205
-  _globals['_HEARTBEATREQUEST']._serialized_end=223
-  _globals['_HEARTBEATRESPONSE']._serialized_start=225
-  _globals['_HEARTBEATRESPONSE']._serialized_end=260
-  _globals['_DATANODE']._serialized_start=263
-  _globals['_DATANODE']._serialized_end=461
+    DESCRIPTOR._loaded_options = None
+    _globals['_BLOCKCHUNK']._serialized_start = 30
+    _globals['_BLOCKCHUNK']._serialized_end = 120
+    _globals['_REPLY']._serialized_start = 122
+    _globals['_REPLY']._serialized_end = 145
+    _globals['_GETFILEREQUEST']._serialized_start = 147
+    _globals['_GETFILEREQUEST']._serialized_end = 199
+    _globals['_GETFILERESPONSE']._serialized_start = 201
+    _globals['_GETFILERESPONSE']._serialized_end = 237
+    _globals['_BLOCKIDREQUEST']._serialized_start = 239
+    _globals['_BLOCKIDREQUEST']._serialized_end = 290
+    _globals['_BLOCKIDRESPONSE']._serialized_start = 292
+    _globals['_BLOCKIDRESPONSE']._serialized_end = 343
+    _globals['_SENDFILERESPONSE']._serialized_start = 345
+    _globals['_SENDFILERESPONSE']._serialized_end = 397
+    _globals['_DELETEFILEREQUEST']._serialized_start = 399
+    _globals['_DELETEFILEREQUEST']._serialized_end = 454
+    _globals['_DELETEFILERESPONSE']._serialized_start = 456
+    _globals['_DELETEFILERESPONSE']._serialized_end = 493
+    _globals['_DATANODE']._serialized_start = 496
+    _globals['_DATANODE']._serialized_end = 772
 # @@protoc_insertion_point(module_scope)

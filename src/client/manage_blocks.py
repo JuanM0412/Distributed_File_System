@@ -24,11 +24,10 @@ def SplitFile(file_path: str):
             with open(block_name, 'wb') as block:
                 block.write(data)
 
-            print(f'Block {block_number} was created: {block_name}')
-
             block_number += 1
 
     return block_names
+
 
 def JoinBlocks(output_file: str, blocks_list: list):
     with open(output_file, 'wb') as file:

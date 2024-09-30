@@ -1,7 +1,7 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
 from utils.utils import GetFileSize, GetFileChunks, SaveChunksToFile
-from config import MB_IN_BYTES
+from config import MB_IN_BYTES, DOWNLOADS_DIR, PARTITIONS_DIR
 import grpc
 import os
 from concurrent import futures
@@ -30,49 +30,52 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
             self.name_node_channel)
 
     def SendFile(self, request, context):
-        current_dir = os.path.dirname(os.path.abspath(__file__)) 
-        
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+
         storage_base_dir = os.path.join(current_dir, 'storage')
 
         user_dir = os.path.join(storage_base_dir, request.username)
-        os.makedirs(user_dir, exist_ok=True) 
 
-        # Change this to the user's directory
-        file_dir = '/home/juan/University/Tópicos_en_Telemática/Distributed_File_System/src/data_node/storage/JuanM0412'
-        print('File dir:', file_dir)
-        os.makedirs(file_dir, exist_ok=True)  
+        os.makedirs(user_dir, exist_ok=True)
 
-        block_file_name = f"block_{request.block_number}"
-        block_file_path = os.path.join(file_dir, block_file_name)
+        file_dir = PARTITIONS_DIR
+
+        os.makedirs(file_dir, exist_ok=True)
+
+        filename = request.filename.replace('\\', '/').split('/')[-1]
+        name, ext = filename.rsplit('.', 1)
+        block_file_name = f"{name}_block_{request.block_number}.{ext}"
+        block_file_path = os.path.join(file_dir, block_file_name) if not block_file_name.startswith('/') else os.path.join(file_dir, block_file_name.lstrip('/'))
 
         with open(block_file_path, 'wb') as f:
             f.write(request.block_data)
 
         block_size_MB = len(request.block_data) / MB_IN_BYTES
-        print(f"Received block {request.block_number} of size {block_size_MB} MB")
-        print(f"Capacity before: {self.capacity_MB} MB")
         self.capacity_MB -= block_size_MB
-        print(f"Capacity after: {self.capacity_MB} MB")
-        
+
         file_size = os.path.getsize(block_file_path)
         return data_node_pb2.Reply(length=file_size)
 
     def GetFile(self, request, context):
-        filename = os.path.join(self.dir, request.filename)
+        path = PARTITIONS_DIR
+        print("Path in getfile:", path)
+        filename = os.path.join(path, request.filename)
+
         if not os.path.exists(filename):
             context.abort(
                 grpc.StatusCode.NOT_FOUND,
                 f"File {request.filename} not found")
 
-        for chunk in GetFileChunks(filename):
-            yield chunk
+        file_data = b''.join(GetFileChunks(filename))
+
+        return data_node_pb2.GetFileResponse(file_data=file_data)
 
     def StartServer(self):
         options = [
-            ('grpc.max_send_message_length', 200 * 1024 * 1024),
-            ('grpc.max_receive_message_length', 200 * 1024 * 1024),
+            ('grpc.max_send_message_length', 1 * 1024 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 1 * 1024 * 1024 * 1024),
         ]
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),options=options)
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=options)
         data_node_pb2_grpc.add_DataNodeServicer_to_server(self, server)
         server.add_insecure_port(f'{self.ip}:{self.port}')
         server.start()
@@ -86,6 +89,22 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
                     self.capacity_MB)))
         self.id = response.id
         print(f'Registered with id: {self.id}')
+
+    def DeleteFile(self, request, context):
+        path = PARTITIONS_DIR
+        filename = os.path.join(path, request.filename)
+
+        if not os.path.exists(filename):
+            context.abort(
+                grpc.StatusCode.NOT_FOUND,
+                f"File {request.filename} not found")
+
+        try:
+            os.remove(filename)
+            print(f"File {request.filename} deleted successfully")
+            return data_node_pb2.DeleteFileResponse(success=True)
+        except Exception as e:
+            print("Continue")
 
     def Heartbeat(self, request, context):
         return data_node_pb2.HeartbeatResponse(alive=True)

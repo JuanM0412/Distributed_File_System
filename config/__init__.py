@@ -18,6 +18,7 @@ DATA_NODE_IP = os.getenv('DATA_NODE_IP')
 DATA_NODE_PORT = os.getenv('DATA_NODE_PORT')
 DATA_NODE_CAPACITY_MB = float(os.getenv('DATA_NODE_CAPACITY_MB'))
 
+PARTITIONS_DIR = os.getenv('PARTITIONS_DIR')
 DOWNLOADS_DIR = os.getenv('DOWNLOADS_DIR')
 
 MB_IN_BYTES = int(os.getenv('MB_IN_BYTES'))

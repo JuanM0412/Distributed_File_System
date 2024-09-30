@@ -7,4 +7,3 @@ class DataNode(BaseModel):
     Port: str
     CapacityMB: int
     IsActive: bool
-    Blocks: List[str]
