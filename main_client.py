@@ -7,9 +7,8 @@ from colorama import init, Fore, Style
 from pyfiglet import Figlet
 
 
-"""
 def print_welcome_message():
-    figlet = Figlet(font='small') 
+    figlet = Figlet(font='small')
     message = figlet.renderText('Welcome to HDFS CLI')
     print(Fore.BLUE + Style.BRIGHT + message + Style.RESET_ALL)
 
@@ -41,14 +40,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(username=args.username, password=args.password)
-
-"""
-if __name__ == '__main__':
-    client = Client(CLIENT_IP, CLIENT_PORT, SERVER_IP, SERVER_PORT)
-    print('Calling Register method...')
-    client.Register(username='sebas', password='123')
-    input('Press Enter to continue...')
-    
-    #client.UploadFile('/large_data.json',r'C:\Users\Sebastian\Downloads\large_data.json')
-    #client.DownloadFile('/large_data.json')
-    client.DeleteFile('/large_data.json')

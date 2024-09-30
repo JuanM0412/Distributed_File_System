@@ -23,7 +23,7 @@ class Database:
     @property
     def dataNodes(self):
         return self._db.dataNodes
-    
+
     @property
     def blocks(self):
         return self._db.blocks

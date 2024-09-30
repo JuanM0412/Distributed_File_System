@@ -3,12 +3,14 @@ from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
 from utils.utils import GetFileSize, GetFileChunks, SaveChunksToFile
 from src.client.manage_blocks import SplitFile
 from config.db import database
-from config import MB_IN_BYTES
-import grpc, os
+from config import MB_IN_BYTES, PARTITIONS_DIR, DOWNLOADS_DIR
+import grpc
+import os
 from src.file_manager.file_manager import FileManager
 import random
 from bson import ObjectId
 from google.protobuf.json_format import MessageToDict, MessageToJson
+
 
 class Client:
     def __init__(self, ip: str, port: int, server_ip: str, server_port: int):
@@ -23,8 +25,8 @@ class Client:
         print(f'Connecting to {server_ip}:{server_port}')
 
         options = [
-            ('grpc.max_send_message_length', 1024 * 1024 * 1024),  
-            ('grpc.max_receive_message_length', 1024 * 1024 * 1024),  
+            ('grpc.max_send_message_length', 1024 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 1024 * 1024 * 1024),
         ]
 
         self.server_channel = grpc.insecure_channel(
@@ -52,8 +54,8 @@ class Client:
             )
         )
 
-        return response.blocks 
-    
+        return response.blocks
+
     def GetDataNodesForRemove(self, filename: str):
         response = self.server_stub.GetDataNodesForRemove(
             name_node_pb2.DataNodesRemoveRequest(
@@ -68,15 +70,15 @@ class Client:
 
     def UploadFile(self, virtual_path: str, filename_: str):
         file_size = int(GetFileSize(filename_))
-        
+
         blocks = list(SplitFile(filename_))
         total_blocks = len(blocks)
 
         options = [
-            ('grpc.max_send_message_length', 1*1024 * 1024 * 1024),  
-            ('grpc.max_receive_message_length', 1*1024 * 1024 * 1024),  
+            ('grpc.max_send_message_length', 1 * 1024 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 1 * 1024 * 1024 * 1024),
         ]
-        
+
         for i, block in enumerate(blocks):
             block_size_bytes = os.path.getsize(block)
             block_size_MB = block_size_bytes / MB_IN_BYTES
@@ -94,49 +96,46 @@ class Client:
 
             with open(block, 'rb') as f:
                 block_data = f.read()
-            
+
             block_chunk = data_node_pb2.BlockChunk(
-                block_data= block_data, 
-                filename= virtual_path,  
-                block_number= i,
+                block_data=block_data,
+                filename=virtual_path,
+                block_number=i,
                 username=self.username
-            )  
-            
+            )
+
             for node in response.nodes:
                 data_node_channel = grpc.insecure_channel(f'{node.ip}:{node.port}', options=options)
                 data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
-                
+
                 try:
                     upload_response = data_node_stub.SendFile(block_chunk)
                 except Exception as e:
-                    print(f"Error uploading to node {node.id}: {str(e)}")
-                    print(f"Error type: {type(e)}")
+
                     continue
-        
+
         print(f'File {filename_} upload complete')
 
     def DownloadFile(self, filename: str):
+        print("Filename in download:", filename)
         data_nodes = self.GetDataNodesForDownload(filename)
-        
+
         options = [
-            ('grpc.max_send_message_length', 1*1024 * 1024 * 1024),  
-            ('grpc.max_receive_message_length', 1*1024 * 1024 * 1024),  
+            ('grpc.max_send_message_length', 1 * 1024 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 1 * 1024 * 1024 * 1024),
         ]
 
         file_data = b''
-        print(data_nodes)
         data_nodes = dict(sorted(data_nodes.items()))
         filename_name = filename.split('.')[0]
         filename_extension = filename.split('.')[1]
         for node in data_nodes:
-            print(f'Downloading from node {node}')
             data_node = database.dataNodes.find_one({'_id': ObjectId(data_nodes[node])})
             data_node_channel = grpc.insecure_channel(f'{data_node['Ip']}:{data_node['Port']}', options=options)
             data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
-            filename_ = filename_name+'_block_'+str(node+1)+'.'+filename_extension
+            filename_ = filename_name + '_block_' + str(node) + '.' + filename_extension
             try:
                 filename_ = filename_[1:]
-                print("FILENAME:", filename_)
                 response = data_node_stub.GetFile(
                     data_node_pb2.GetFileRequest(
                         filename=filename_,
@@ -144,17 +143,14 @@ class Client:
                     )
                 )
                 file_data += response.file_data
-                print(f"Current file_data size: {len(file_data)} bytes")  # Imprimir tamaño de file_data
             except Exception as e:
-                print(f"Error downloading from node {node['_id']}: {str(e)}")
-                print(f"Error type: {type(e)}")
                 continue
-        
+
         only_name = os.path.basename(filename)
-        download_path = os.path.join(r"C:\Users\Sebastian\Documents", only_name)
+        download_path = os.path.join(DOWNLOADS_DIR, only_name)
         with open(download_path, 'wb') as f:
             f.write(file_data)
-        
+
         print(f'File {filename} download complete')
 
     def Register(self, username: str, password: str):
@@ -186,27 +182,24 @@ class Client:
         if not response:
             print("Error: No response from GetDataNodesForRemove")
             return
-
-        # Convertir cada elemento en response a un diccionario
         response_dict = [MessageToDict(block) for block in response]
-        
+
         data_nodes = response_dict
 
         options = [
-            ('grpc.max_send_message_length', 1*1024 * 1024 * 1024),  
-            ('grpc.max_receive_message_length', 1*1024 * 1024 * 1024),  
+            ('grpc.max_send_message_length', 1 * 1024 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 1 * 1024 * 1024 * 1024),
         ]
-        
+
         filename_name = filename.split('.')[0]
         filename_extension = filename.split('.')[1]
 
         for block_index, block_info in enumerate(data_nodes):
             for node in block_info.get('nodes', []):
-                print(f'Removing from node {node["id"]}')
                 data_node = database.dataNodes.find_one({'_id': ObjectId(node["id"])})
                 data_node_channel = grpc.insecure_channel(f'{data_node["Ip"]}:{data_node["Port"]}', options=options)
                 data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
-                filename_ = filename_name + '_block_' + str(block_index + 1) + '.' + filename_extension
+                filename_ = filename_name + '_block_' + str(block_index) + '.' + filename_extension
                 try:
                     filename_ = filename_[1:]
                     response = data_node_stub.DeleteFile(
@@ -215,9 +208,8 @@ class Client:
                             username=self.username
                         )
                     )
-                    print(f'Response from node {node["id"]}: {response}')
 
                 except Exception as e:
                     continue
-        
+
         print(f'File {filename} removed complete')

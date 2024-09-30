@@ -33,12 +33,14 @@ class CLI:
                     self.put(args)
                 elif cmd == 'clear':
                     self.clear()
+                elif cmd == 'get':
+                    self.get(args)
                 else:
                     print(f"Command '{cmd}' not found.")
 
     def clear(self):
         os.system('cls' if os.name == 'nt' else 'clear')
-    
+
     def cd(self, args):
         if len(args) != 1:
             print("Usage: cd <directory>")
@@ -86,12 +88,13 @@ class CLI:
         virtual_path = os.path.join(self.current_path, file_name)
         if path == 'dir':
             force = False
-            if(len(args) == 3):
+            if (len(args) == 3):
                 force = bool(args[3].split('=')[1])
             self.client.GetFileManager().RemoveDirectory(file_name, force)
         else:
+            print("Deleting file...")
+            self.client.DeleteFile(file_name)
             self.client.GetFileManager().Rm(self.current_path, virtual_path)
-            self.client.DeleteFile(virtual_path)
 
     def put(self, args):
         if len(args) != 1:
@@ -100,8 +103,17 @@ class CLI:
         file_name = args[0]
         file = os.path.basename(file_name)
         virtual_path = os.path.join(self.current_path, file)
+        print("Uploading file...")
+        self.client.UploadFile(virtual_path, file_name)
         self.client.GetFileManager().Put(
             self.current_path,
             virtual_path,
             os.path.getsize(file_name))
-        self.client.UploadFile(virtual_path, file_name)
+
+    def get(self, args):
+        if len(args) != 1:
+            print("Usage: get <file_name>")
+            return
+        file_name = args[0]
+        print("Downloading file...")
+        self.client.DownloadFile(file_name)
