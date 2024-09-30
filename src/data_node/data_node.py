@@ -54,7 +54,6 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         file_size = os.path.getsize(chunk_file_path)
         return data_node_pb2.Reply(length=file_size)
 
-    
     def GetFile(self, request, context):
         filename = os.path.join(self.dir, request.filename)
         if not os.path.exists(filename):
@@ -80,3 +79,6 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
                     self.capacity_MB)))
         self.id = response.id
         print(f'Registered with id: {self.id}')
+
+    def Heartbeat(self, request, context):
+        return data_node_pb2.HeartbeatResponse(status='Alive')

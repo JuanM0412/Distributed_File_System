@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from . import data_node_pb2 as data__node__pb2
+import data_node_pb2 as data__node__pb2
 
 GRPC_GENERATED_VERSION = '1.66.1'
 GRPC_VERSION = grpc.__version__
@@ -44,6 +44,11 @@ class DataNodeStub(object):
                 request_serializer=data__node__pb2.GetFileRequest.SerializeToString,
                 response_deserializer=data__node__pb2.FileChunk.FromString,
                 _registered_method=True)
+        self.Heartbeat = channel.unary_unary(
+                '/data_node.DataNode/Heartbeat',
+                request_serializer=data__node__pb2.HeartbeatRequest.SerializeToString,
+                response_deserializer=data__node__pb2.HeartbeatResponse.FromString,
+                _registered_method=True)
 
 
 class DataNodeServicer(object):
@@ -61,6 +66,12 @@ class DataNodeServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Heartbeat(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DataNodeServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -73,6 +84,11 @@ def add_DataNodeServicer_to_server(servicer, server):
                     servicer.GetFile,
                     request_deserializer=data__node__pb2.GetFileRequest.FromString,
                     response_serializer=data__node__pb2.FileChunk.SerializeToString,
+            ),
+            'Heartbeat': grpc.unary_unary_rpc_method_handler(
+                    servicer.Heartbeat,
+                    request_deserializer=data__node__pb2.HeartbeatRequest.FromString,
+                    response_serializer=data__node__pb2.HeartbeatResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -129,6 +145,33 @@ class DataNode(object):
             '/data_node.DataNode/GetFile',
             data__node__pb2.GetFileRequest.SerializeToString,
             data__node__pb2.FileChunk.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Heartbeat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/data_node.DataNode/Heartbeat',
+            data__node__pb2.HeartbeatRequest.SerializeToString,
+            data__node__pb2.HeartbeatResponse.FromString,
             options,
             channel_credentials,
             insecure,

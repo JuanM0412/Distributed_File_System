@@ -5,6 +5,7 @@ package data_node;
 service DataNode {
     rpc SendFile(FileChunk) returns (Reply);
     rpc GetFile(GetFileRequest) returns (stream FileChunk);
+    rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
 }
 
 message FileChunk {
@@ -21,4 +22,11 @@ message Reply {
 
 message GetFileRequest {
     string filename = 1;
+}
+
+message HeartbeatRequest {
+}
+
+message HeartbeatResponse {
+    string status = 1;
 }

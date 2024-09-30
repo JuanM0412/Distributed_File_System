@@ -1,4 +1,5 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
+from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
 
 import grpc
 import json
@@ -15,6 +16,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     def __init__(self, ip: str, port: int):
         self.ip = ip
         self.port = port
+        self.data_nodes_connections = {}
 
     def Register(self, request, context):
         # Extract the info about the dataNode.
@@ -173,7 +175,44 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
         else:
             return name_node_pb2.ValidateUserResponse(
                 status='Invalid username or password')
+        
+    def CheckAliveDataNodes(self):
+        data_nodes = list(database.dataNodes.find({'IsActive': True}))
+        for data_node in data_nodes:
+            try:
+                channel = grpc.insecure_channel(f'{data_node["Ip"]}:{data_node["Port"]}')
+                stub = data_node_pb2_grpc.DataNodeStub(channel)
+                response = stub.Heartbeat(data_node_pb2.HeartbeatRequest())
+                if response.status == 'Alive':
+                    self.data_nodes_connections[data_node['_id']] = 0
+                else:
+                    self.data_nodes_connections[data_node['_id']] += 3
+                if self.data_nodes_connections[data_node['_id']] >= 600:
+                    database.dataNodes.update_one({'_id': data_node['_id']}, {'$set': {'IsActive': False}})
+            except Exception:
+                self.data_nodes_connections[data_node['_id']] += 3
+                if self.data_nodes_connections[data_node['_id']] >= 600:
+                    database.dataNodes.update_one({'_id': data_node['_id']}, {'$set': {'IsActive': False}})
 
+    def RelocateBlocks(self, data_node_id):
+        master_blocks = database.blocks.find({'Master': data_node_id})
+        slave_blocks = database.blocks.find({'Slaves': data_node_id})
+
+        for block in master_blocks:
+            print(f'Moving block {block} from {data_node_id} to {block.Master}')
+            database.blocks.update_one({'_id': block['_id']}, {'$set': {'Master': block.Master}})
+
+        for block in slave_blocks:
+            master = database.dataNodes.find_one({'_id': block.Master})
+
+            new_master_id = self.RandomWeight(block.SizeMB, [data_node_id, block.Slaves[0], block.Slaves[1]])
+            if new_master_id:
+                new_node = database.dataNodes.find_one({'_id': new_master_id})
+                channel = grpc.insecure_channel(f'{new_node["Ip"]}:{new_node["Port"]}')
+                stub = data_node_pb2_grpc.DataNodeStub(channel)
+                stub.AskForBlock(block['_id'], block.Slaves[0])
+
+            database.blocks.update_one({'_id': block['_id']}, {'$set': {'Slaves': block.Slaves}})
 
 def StartServer(ip: str, port: int):
     print('Server is running')
