@@ -213,3 +213,7 @@ class Client:
                     continue
 
         print(f'File {filename} removed complete')
+
+    def DeleteFiles(self, filenames: list):
+        for filename in filenames:
+            self.DeleteFile(filename)

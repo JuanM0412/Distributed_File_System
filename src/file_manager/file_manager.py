@@ -227,3 +227,23 @@ class FileManager:
             {"Username": self.username},
             {"$set": {"Directories": directories}}
         )
+
+    def ListFiles(self, path: str):
+        if self.username is None:
+            print("Username is not set. Please register first")
+            return []
+
+        user_data = self.users_collection.find_one({"Username": self.username})
+        if not user_data:
+            print("User not found")
+            return []
+
+        directories = user_data['Directories']
+        dir_to_list = self.FindDirectory(directories, path)
+
+        if dir_to_list is None:
+            print(f"Directory {path} not found")
+            return []
+
+        files = [item['Name'] for item in dir_to_list['Contents'] if not item['IsDir']]
+        return files

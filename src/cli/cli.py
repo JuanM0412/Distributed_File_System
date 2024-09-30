@@ -90,6 +90,8 @@ class CLI:
             force = False
             if (len(args) == 3):
                 force = bool(args[3].split('=')[1])
+            files = self.client.GetFileManager().ListFiles(file_name)
+            self.client.DeleteFiles(files)
             self.client.GetFileManager().RemoveDirectory(file_name, force)
         else:
             print("Deleting file...")
@@ -117,3 +119,16 @@ class CLI:
         file_name = args[0]
         print("Downloading file...")
         self.client.DownloadFile(file_name)
+
+    def list_files(self, args):
+        if len(args) != 1:
+            print("Usage: list_files <directory>")
+            return
+        path = args[0]
+        files = self.client.GetFileManager().ListFiles(path)
+        if files:
+            print(f"Files in {path}:")
+            for file in files:
+                print(file)
+        else:
+            print(f"No files found in {path}")
