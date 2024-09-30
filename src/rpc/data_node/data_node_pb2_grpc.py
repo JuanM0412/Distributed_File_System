@@ -35,15 +35,25 @@ class DataNodeStub(object):
             channel: A grpc.Channel.
         """
         self.SendFile = channel.unary_unary(
-                '/data_node.DataNode/SendFile',
-                request_serializer=data__node__pb2.BlockChunk.SerializeToString,
-                response_deserializer=data__node__pb2.Reply.FromString,
-                _registered_method=True)
-        self.GetFile = channel.unary_stream(
-                '/data_node.DataNode/GetFile',
-                request_serializer=data__node__pb2.GetFileRequest.SerializeToString,
-                response_deserializer=data__node__pb2.BlockChunk.FromString,
-                _registered_method=True)
+            '/data_node.DataNode/SendFile',
+            request_serializer=data__node__pb2.BlockChunk.SerializeToString,
+            response_deserializer=data__node__pb2.SendFileResponse.FromString,
+            _registered_method=True)
+        self.GetFile = channel.unary_unary(
+            '/data_node.DataNode/GetFile',
+            request_serializer=data__node__pb2.GetFileRequest.SerializeToString,
+            response_deserializer=data__node__pb2.GetFileResponse.FromString,
+            _registered_method=True)
+        self.StoreBlockID = channel.unary_unary(
+            '/data_node.DataNode/StoreBlockID',
+            request_serializer=data__node__pb2.BlockIDRequest.SerializeToString,
+            response_deserializer=data__node__pb2.Reply.FromString,
+            _registered_method=True)
+        self.DeleteFile = channel.unary_unary(
+            '/data_node.DataNode/DeleteFile',
+            request_serializer=data__node__pb2.DeleteFileRequest.SerializeToString,
+            response_deserializer=data__node__pb2.DeleteFileResponse.FromString,
+            _registered_method=True)
 
 
 class DataNodeServicer(object):
@@ -61,47 +71,70 @@ class DataNodeServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def StoreBlockID(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteFile(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DataNodeServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'SendFile': grpc.unary_unary_rpc_method_handler(
-                    servicer.SendFile,
-                    request_deserializer=data__node__pb2.BlockChunk.FromString,
-                    response_serializer=data__node__pb2.Reply.SerializeToString,
-            ),
-            'GetFile': grpc.unary_stream_rpc_method_handler(
-                    servicer.GetFile,
-                    request_deserializer=data__node__pb2.GetFileRequest.FromString,
-                    response_serializer=data__node__pb2.BlockChunk.SerializeToString,
-            ),
+        'SendFile': grpc.unary_unary_rpc_method_handler(
+            servicer.SendFile,
+            request_deserializer=data__node__pb2.BlockChunk.FromString,
+            response_serializer=data__node__pb2.SendFileResponse.SerializeToString,
+        ),
+        'GetFile': grpc.unary_unary_rpc_method_handler(
+            servicer.GetFile,
+            request_deserializer=data__node__pb2.GetFileRequest.FromString,
+            response_serializer=data__node__pb2.GetFileResponse.SerializeToString,
+        ),
+        'StoreBlockID': grpc.unary_unary_rpc_method_handler(
+            servicer.StoreBlockID,
+            request_deserializer=data__node__pb2.BlockIDRequest.FromString,
+            response_serializer=data__node__pb2.Reply.SerializeToString,
+        ),
+        'DeleteFile': grpc.unary_unary_rpc_method_handler(
+            servicer.DeleteFile,
+            request_deserializer=data__node__pb2.DeleteFileRequest.FromString,
+            response_serializer=data__node__pb2.DeleteFileResponse.SerializeToString,
+        ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'data_node.DataNode', rpc_method_handlers)
+        'data_node.DataNode', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
     server.add_registered_method_handlers('data_node.DataNode', rpc_method_handlers)
 
-
  # This class is part of an EXPERIMENTAL API.
+
+
 class DataNode(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def SendFile(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+                 target,
+                 options=(),
+                 channel_credentials=None,
+                 call_credentials=None,
+                 insecure=False,
+                 compression=None,
+                 wait_for_ready=None,
+                 timeout=None,
+                 metadata=None):
         return grpc.experimental.unary_unary(
             request,
             target,
             '/data_node.DataNode/SendFile',
             data__node__pb2.BlockChunk.SerializeToString,
-            data__node__pb2.Reply.FromString,
+            data__node__pb2.SendFileResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -114,21 +147,75 @@ class DataNode(object):
 
     @staticmethod
     def GetFile(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(
+                target,
+                options=(),
+                channel_credentials=None,
+                call_credentials=None,
+                insecure=False,
+                compression=None,
+                wait_for_ready=None,
+                timeout=None,
+                metadata=None):
+        return grpc.experimental.unary_unary(
             request,
             target,
             '/data_node.DataNode/GetFile',
             data__node__pb2.GetFileRequest.SerializeToString,
-            data__node__pb2.BlockChunk.FromString,
+            data__node__pb2.GetFileResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StoreBlockID(request,
+                     target,
+                     options=(),
+                     channel_credentials=None,
+                     call_credentials=None,
+                     insecure=False,
+                     compression=None,
+                     wait_for_ready=None,
+                     timeout=None,
+                     metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/data_node.DataNode/StoreBlockID',
+            data__node__pb2.BlockIDRequest.SerializeToString,
+            data__node__pb2.Reply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteFile(request,
+                   target,
+                   options=(),
+                   channel_credentials=None,
+                   call_credentials=None,
+                   insecure=False,
+                   compression=None,
+                   wait_for_ready=None,
+                   timeout=None,
+                   metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/data_node.DataNode/DeleteFile',
+            data__node__pb2.DeleteFileRequest.SerializeToString,
+            data__node__pb2.DeleteFileResponse.FromString,
             options,
             channel_credentials,
             insecure,
