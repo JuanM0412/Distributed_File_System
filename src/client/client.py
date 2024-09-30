@@ -70,7 +70,7 @@ class Client:
             ('grpc.max_send_message_length', 200 * 1024 * 1024),  
             ('grpc.max_receive_message_length', 200 * 1024 * 1024),  
         ]
-        
+
         for i, block in enumerate(blocks):
             print(f'Uploading block {i}')
             block_size_bytes = os.path.getsize(block)
@@ -86,7 +86,7 @@ class Client:
             user_ = self.username
             
             response = self.server_stub.GetDataNodesForUpload(request)
-            
+
             print(f'Received response from server for block {i}')
             print(f'Number of data nodes available: {len(response.nodes)}')
             

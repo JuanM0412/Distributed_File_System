@@ -5,6 +5,7 @@ from config import MB_IN_BYTES
 import grpc
 import os
 from concurrent import futures
+from config.db import database
 
 
 class DataNode(data_node_pb2_grpc.DataNodeServicer):
@@ -87,4 +88,22 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         print(f'Registered with id: {self.id}')
 
     def Heartbeat(self, request, context):
-        return data_node_pb2.HeartbeatResponse(status='Alive')
+        return data_node_pb2.HeartbeatResponse(alive=True)
+    
+    def AskForBlock(self, request, context):
+        node_to_ask_id = request.node_id
+        node_to_ask = database.dataNodes.find_one({'_id': node_to_ask_id})
+        
+        block_id = request.block_id
+        block = database.blocks.find_one({'_id': block_id})
+        metadata = database.metadata.find_one({'Blocks': block_id})
+        
+        filename = metadata['Filename']
+
+        channel = grpc.insecure_channel(f'{node_to_ask["Ip"]}:{node_to_ask["Port"]}')
+        stub = data_node_pb2_grpc.DataNodeStub(channel)
+
+        response = stub.GetFile(data_node_pb2.GetFileRequest(filename=filename))
+        
+
+        return data_node_pb2.AskForBlockResponse(status=True)

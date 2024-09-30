@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import data_node_pb2 as data__node__pb2
+import src.rpc.data_node.data_node_pb2 as data__node__pb2
 
 GRPC_GENERATED_VERSION = '1.66.1'
 GRPC_VERSION = grpc.__version__
