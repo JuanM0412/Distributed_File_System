@@ -4,6 +4,7 @@ from utils.utils import GetFileSize, GetFileChunks, SaveChunksToFile
 from config import MB_IN_BYTES, DOWNLOADS_DIR, PARTITIONS_DIR
 import grpc
 import os
+from bson import ObjectId
 from concurrent import futures
 from config.db import database
 
@@ -30,14 +31,6 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
             self.name_node_channel)
 
     def SendFile(self, request, context):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-
-        storage_base_dir = os.path.join(current_dir, 'storage')
-
-        user_dir = os.path.join(storage_base_dir, request.username)
-
-        os.makedirs(user_dir, exist_ok=True)
-
         file_dir = PARTITIONS_DIR
 
         os.makedirs(file_dir, exist_ok=True)
@@ -59,7 +52,8 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
     def GetFile(self, request, context):
         path = PARTITIONS_DIR
         print("Path in getfile:", path)
-        filename = os.path.join(path, request.filename)
+        filename = os.path.join(path, request.filename).replace('\\', '/')
+        print("Filename in getfile:", filename)
 
         if not os.path.exists(filename):
             context.abort(
@@ -108,21 +102,40 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
 
     def Heartbeat(self, request, context):
         return data_node_pb2.HeartbeatResponse(alive=True)
-    
+
     def AskForBlock(self, request, context):
-        node_to_ask_id = request.node_id
-        node_to_ask = database.dataNodes.find_one({'_id': node_to_ask_id})
-        
-        block_id = request.block_id
-        block = database.blocks.find_one({'_id': block_id})
-        metadata = database.metadata.find_one({'Blocks': block_id})
-        
-        filename = metadata['Filename']
+        node_to_ask_id = ObjectId(request.node_id)
+        node_to_ask = dict(database.dataNodes.find_one({'_id': node_to_ask_id}))
+        if node_to_ask is None:
+            return data_node_pb2.AskForBlockResponse(status=False)
 
-        channel = grpc.insecure_channel(f'{node_to_ask["Ip"]}:{node_to_ask["Port"]}')
-        stub = data_node_pb2_grpc.DataNodeStub(channel)
+        block_metadata = dict(database.metaData.find_one({'Blocks': str(request.block_id)}))
+        if block_metadata is None:
+            return data_node_pb2.AskForBlockResponse(status=False)
 
-        response = stub.GetFile(data_node_pb2.GetFileRequest(filename=filename))
-        
+        filename = request.filename
+
+        try:
+            channel = grpc.insecure_channel(f'{node_to_ask["Ip"]}:{node_to_ask["Port"]}')
+            stub = data_node_pb2_grpc.DataNodeStub(channel)
+
+            response = stub.GetFile(
+                data_node_pb2.GetFileRequest(
+                    filename=filename, 
+                    username=block_metadata['Owner']
+                )
+            )
+        except Exception as e:
+            return data_node_pb2.AskForBlockResponse(status=False)
+
+        if not response.file_data:
+            return data_node_pb2.AskForBlockResponse(status=False)
+
+        path = PARTITIONS_DIR
+        os.makedirs(path, exist_ok=True)
+        full_file_path = os.path.join(path, os.path.basename(filename))
+
+        with open(full_file_path, 'wb') as f:
+            f.write(response.file_data)
 
         return data_node_pb2.AskForBlockResponse(status=True)
