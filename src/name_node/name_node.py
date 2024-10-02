@@ -300,8 +300,14 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
         slave_blocks = list(database.blocks.find({'Slaves': data_node_id}))
 
         for block in master_blocks:
-            block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
-            block_id = str(block['_id'])
+            try:
+                block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
+                block_id = str(block['_id'])
+                print(f'Block metadata: {block_metadata}')
+            except:
+                block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(block['_id'])}))
+                block_id = str(block['_id'])
+                print(f'Block metadata: {block_metadata}')
 
             name, ext = block_metadata['Name'].rsplit('.', 1)
             block_index = block_metadata['Blocks'].index(block_id)
@@ -310,7 +316,12 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
 
             excluded_nodes = [ObjectId(data_node_id), ObjectId(block['Slaves'][0]), ObjectId(block['Slaves'][1])]
             new_master_id = self.RandomWeight(128, excluded_nodes)
-            new_master = database.dataNodes.find_one({'_id': ObjectId(new_master_id)})
+            try:
+                new_master = dict(database.dataNodes.find_one({'_id': ObjectId(new_master_id)}))
+                print(f'New master: {new_master}')
+            except Exception as e:
+                new_master = dict(database.dataNodes.find_one({'_id': ObjectId(new_master_id)}))
+                print(f'New master: {new_master}')
 
             print(f'Moving block {block_file_name} to {new_master["Ip"]}:{new_master["Port"]}\n')
 
@@ -330,8 +341,14 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                 print(f'Block {block["_id"]} not updated')
 
         for block in slave_blocks:            
-            block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
-            block_id = str(block['_id'])
+            try:
+                block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
+                block_id = str(block['_id'])
+                print(f'Block metadata: {block_metadata}')
+            except:
+                block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(block['_id'])}))
+                block_id = str(block['_id'])
+                print(f'Block metadata: {block_metadata}')
 
             name, ext = block_metadata['Name'].rsplit('.', 1)
             block_index = block_metadata['Blocks'].index(block_id)
@@ -340,7 +357,12 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
 
             excluded_nodes = [ObjectId(data_node_id), ObjectId(block['Slaves'][0]), ObjectId(block['Slaves'][1])]
             new_slave_id = self.RandomWeight(128, excluded_nodes)
-            new_slave = database.dataNodes.find_one({'_id': ObjectId(new_slave_id)})
+            try:
+                new_slave = dict(database.dataNodes.find_one({'_id': ObjectId(new_slave_id)}))
+                print(f'New slave: {new_slave}')
+            except Exception as e:  
+                new_slave = dict(database.dataNodes.find_one({'_id': ObjectId(new_slave_id)}))
+                print(f'New slave: {new_slave}')
 
             print(f'Moving block {block_file_name} to {new_slave["Ip"]}:{new_slave["Port"]}')
 
