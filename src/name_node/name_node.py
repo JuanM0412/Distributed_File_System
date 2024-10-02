@@ -321,7 +321,11 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                     continue
 
                 name, ext = block_metadata['Name'].rsplit('.', 1)
-                block_index = block_metadata['Blocks'].index(block_id)
+                try:
+                    block_index = block_metadata['Blocks'].index(str(block_id))
+                except:
+                    block_index = block_metadata['Blocks'].index(block_id)
+
                 block_file_name = f"{name[1:]}_block_{block_index}.{ext}"
                 print(f'Block filename: {block_file_name}')
             except Exception as e:
