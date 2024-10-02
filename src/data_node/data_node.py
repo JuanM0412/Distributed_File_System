@@ -115,8 +115,11 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
                 return data_node_pb2.AskForBlockResponse(status=False)
             
             print(f"Node to ask: {node_to_ask}")
-            
-            block_metadata = dict(database.metaData.find_one({'Blocks': str(request.block_id)}))
+            try:
+                block_metadata = dict(database.metaData.find_one({'Blocks': str(request.block_id)}))
+            except:
+                block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(request.block_id)}))
+
             if block_metadata is None:
                 print(f"Error: Block {request.block_id} not found in metaData.")
                 return data_node_pb2.AskForBlockResponse(status=False)

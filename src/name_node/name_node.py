@@ -289,6 +289,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                     self.data_nodes_connections[data_node['_id']] = time.time()
                 else:
                     time_difference = time.time() - self.data_nodes_connections[data_node['_id']]
+                    print('time difference', time_difference)
                     if time_difference >= 10:
                         print(f'Time difference: {time_difference}, Data node {data_node["_id"]} is dead')
                         database.dataNodes.update_one({'_id': data_node['_id']}, {'$set': {'IsActive': False}})
@@ -351,6 +352,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
 
                 if response.status:
                     database.blocks.update_one({'_id': block['_id']}, {'$set': {'Master': new_master_id}})
+                    print(f'Block {block_file_name} moved successfuly to {new_slave["Ip"]}:{new_slave["Port"]}')
                 else:
                     print(f'Block {block["_id"]} not updated')
             except Exception as e:
@@ -373,7 +375,10 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                     continue
 
                 name, ext = block_metadata['Name'].rsplit('.', 1)
-                block_index = block_metadata['Blocks'].index(block_id)
+                try:
+                    block_index = block_metadata['Blocks'].index(str(block_id))
+                except:
+                    block_index = block_metadata['Blocks'].index(ObjectId(block_id))
                 block_file_name = f"{name[1:]}_block_{block_index}.{ext}"
                 print(f'Block filename: {block_file_name}')
             except Exception as e:
@@ -390,13 +395,13 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                 continue
 
             try:
-                print(f'Moving block {block_file_name} to {new_slave["Ip"]}:{new_slave["Port"]}')
+                print(f'Asking {new_slave["Ip"]}:{new_slave["Port"]} to get block {block_file_name} from {block['Master']}')
                 channel = grpc.insecure_channel(f'{new_slave["Ip"]}:{new_slave["Port"]}')
                 stub = data_node_pb2_grpc.DataNodeStub(channel)
                 response = stub.AskForBlock(
                     data_node_pb2.AskForBlockRequest(
                         block_id=str(block['_id']),
-                        node_id=str(new_slave_id),
+                        node_id=str(block['Master']),
                         filename=block_file_name
                     )
                 )
@@ -404,6 +409,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                 if response.status:
                     new_slaves = [str(slave) for slave in block['Slaves'] if slave != data_node_id] + [str(new_slave_id)]
                     database.blocks.update_one({'_id': block['_id']}, {'$set': {'Slaves': new_slaves}})
+                    print(f'Block {block_file_name} moved successfuly to {new_slave["Ip"]}:{new_slave["Port"]}')
                 else:
                     print(f'Block {block["_id"]} not updated')
             except Exception as e:
