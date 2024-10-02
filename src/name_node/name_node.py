@@ -351,7 +351,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
 
                 if response.status:
                     database.blocks.update_one({'_id': block['_id']}, {'$set': {'Master': new_master_id}})
-                    print(f'Block {block_file_name} moved successfuly to {new_slave["Ip"]}:{new_slave["Port"]}')
+                    print(f'Block {block_file_name} moved successfuly to {new_master["Ip"]}:{new_master["Port"]}')
                 else:
                     print(f'Block {block["_id"]} not updated')
             except Exception as e:
