@@ -296,91 +296,120 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
             
     def RelocateBlocks(self, data_node_id):
 
-        master_blocks = list(database.blocks.find({'Master': data_node_id}))
-        slave_blocks = list(database.blocks.find({'Slaves': data_node_id}))
+        try:
+            master_blocks = list(database.blocks.find({'Master': data_node_id}))
+            slave_blocks = list(database.blocks.find({'Slaves': data_node_id}))
+            print(f'Master blocks: {master_blocks}')
+            print(f'Slave blocks: {slave_blocks}')
+        except Exception as e:
+            print(f'Error fetching master or slave blocks: {e}')
+            return
 
         for block in master_blocks:
             try:
-                block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
-                block_id = str(block['_id'])
-                print(f'Block metadata: {block_metadata}')
-            except:
-                block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(block['_id'])}))
-                block_id = str(block['_id'])
-                print(f'Block metadata: {block_metadata}')
+                try:
+                    block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
+                    block_id = str(block['_id'])
+                    print(f'Block metadata (string ID): {block_metadata}')
+                except:
+                    block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(block['_id'])}))
+                    block_id = str(block['_id'])
+                    print(f'Block metadata (ObjectId): {block_metadata}')
 
-            name, ext = block_metadata['Name'].rsplit('.', 1)
-            block_index = block_metadata['Blocks'].index(block_id)
-            block_file_name = f"{name[1:]}_block_{block_index}.{ext}"
-            print(f'Block filename: {block_file_name}')
+                if not block_metadata:
+                    print(f'Error: Block metadata not found for block {block_id}')
+                    continue
 
-            excluded_nodes = [ObjectId(data_node_id), ObjectId(block['Slaves'][0]), ObjectId(block['Slaves'][1])]
-            new_master_id = self.RandomWeight(128, excluded_nodes)
+                name, ext = block_metadata['Name'].rsplit('.', 1)
+                block_index = block_metadata['Blocks'].index(block_id)
+                block_file_name = f"{name[1:]}_block_{block_index}.{ext}"
+                print(f'Block filename: {block_file_name}')
+            except Exception as e:
+                print(f'Error processing master block {block["_id"]}: {e}')
+                continue
+
             try:
+                excluded_nodes = [ObjectId(data_node_id), ObjectId(block['Slaves'][0]), ObjectId(block['Slaves'][1])]
+                new_master_id = self.RandomWeight(128, excluded_nodes)
                 new_master = dict(database.dataNodes.find_one({'_id': ObjectId(new_master_id)}))
                 print(f'New master: {new_master}')
             except Exception as e:
-                new_master = dict(database.dataNodes.find_one({'_id': str(new_master_id)}))
-                print(f'New master: {new_master}')
+                print(f'Error fetching new master for block {block["_id"]}: {e}')
+                continue
 
-            print(f'Moving block {block_file_name} to {new_master["Ip"]}:{new_master["Port"]}\n')
-
-            channel = grpc.insecure_channel(f'{new_master["Ip"]}:{new_master["Port"]}')
-            stub = data_node_pb2_grpc.DataNodeStub(channel)
-            response = stub.AskForBlock(
-                data_node_pb2.AskForBlockRequest(
-                    block_id=str(block['_id']),
-                    node_id=str(block['Slaves'][0]),
-                    filename=block_file_name
+            try:
+                print(f'Moving block {block_file_name} to {new_master["Ip"]}:{new_master["Port"]}')
+                channel = grpc.insecure_channel(f'{new_master["Ip"]}:{new_master["Port"]}')
+                stub = data_node_pb2_grpc.DataNodeStub(channel)
+                response = stub.AskForBlock(
+                    data_node_pb2.AskForBlockRequest(
+                        block_id=str(block['_id']),
+                        node_id=str(block['Slaves'][0]),
+                        filename=block_file_name
+                    )
                 )
-            )
 
-            if response.status:
-                database.blocks.update_one({'_id': block['_id']}, {'$set': {'Master': new_master_id}})
-            else:
-                print(f'Block {block["_id"]} not updated')
+                if response.status:
+                    database.blocks.update_one({'_id': block['_id']}, {'$set': {'Master': new_master_id}})
+                else:
+                    print(f'Block {block["_id"]} not updated')
+            except Exception as e:
+                print(f'Error during gRPC call or block update for block {block["_id"]}: {e}')
+                continue
 
-        for block in slave_blocks:            
+        for block in slave_blocks:
             try:
-                block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
-                block_id = str(block['_id'])
-                print(f'Block metadata: {block_metadata}')
-            except:
-                block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(block['_id'])}))
-                block_id = str(block['_id'])
-                print(f'Block metadata: {block_metadata}')
+                try:
+                    block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
+                    block_id = str(block['_id'])
+                    print(f'Block metadata (string ID): {block_metadata}')
+                except:
+                    block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(block['_id'])}))
+                    block_id = str(block['_id'])
+                    print(f'Block metadata (ObjectId): {block_metadata}')
 
-            name, ext = block_metadata['Name'].rsplit('.', 1)
-            block_index = block_metadata['Blocks'].index(block_id)
-            block_file_name = f"{name[1:]}_block_{block_index}.{ext}"
-            print(f'Block filename: {block_file_name}')
+                if not block_metadata:
+                    print(f'Error: Block metadata not found for block {block_id}')
+                    continue
 
-            excluded_nodes = [ObjectId(data_node_id), ObjectId(block['Slaves'][0]), ObjectId(block['Slaves'][1])]
-            new_slave_id = self.RandomWeight(128, excluded_nodes)
+                name, ext = block_metadata['Name'].rsplit('.', 1)
+                block_index = block_metadata['Blocks'].index(block_id)
+                block_file_name = f"{name[1:]}_block_{block_index}.{ext}"
+                print(f'Block filename: {block_file_name}')
+            except Exception as e:
+                print(f'Error processing slave block {block["_id"]}: {e}')
+                continue
+
             try:
+                excluded_nodes = [ObjectId(data_node_id), ObjectId(block['Slaves'][0]), ObjectId(block['Slaves'][1])]
+                new_slave_id = self.RandomWeight(128, excluded_nodes)
                 new_slave = dict(database.dataNodes.find_one({'_id': ObjectId(new_slave_id)}))
                 print(f'New slave: {new_slave}')
-            except Exception as e:  
-                new_slave = dict(database.dataNodes.find_one({'_id': str(new_slave_id)}))
-                print(f'New slave: {new_slave}')
+            except Exception as e:
+                print(f'Error fetching new slave for block {block["_id"]}: {e}')
+                continue
 
-            print(f'Moving block {block_file_name} to {new_slave["Ip"]}:{new_slave["Port"]}')
-
-            channel = grpc.insecure_channel(f'{new_slave["Ip"]}:{new_slave["Port"]}')
-            stub = data_node_pb2_grpc.DataNodeStub(channel)
-            response = stub.AskForBlock(
-                data_node_pb2.AskForBlockRequest(
-                    block_id=str(block['_id']),
-                    node_id=str(new_slave_id),
-                    filename=block_file_name
+            try:
+                print(f'Moving block {block_file_name} to {new_slave["Ip"]}:{new_slave["Port"]}')
+                channel = grpc.insecure_channel(f'{new_slave["Ip"]}:{new_slave["Port"]}')
+                stub = data_node_pb2_grpc.DataNodeStub(channel)
+                response = stub.AskForBlock(
+                    data_node_pb2.AskForBlockRequest(
+                        block_id=str(block['_id']),
+                        node_id=str(new_slave_id),
+                        filename=block_file_name
+                    )
                 )
-            )
 
-            if response.status:
-                new_slaves = [str(slave) for slave in block['Slaves'] if slave != data_node_id] + [str(new_slave_id)]
-                database.blocks.update_one({'_id': block['_id']}, {'$set': {'Slaves': new_slaves}})
-            else:
-                print(f'Block {block["_id"]} not updated')
+                if response.status:
+                    new_slaves = [str(slave) for slave in block['Slaves'] if slave != data_node_id] + [str(new_slave_id)]
+                    database.blocks.update_one({'_id': block['_id']}, {'$set': {'Slaves': new_slaves}})
+                else:
+                    print(f'Block {block["_id"]} not updated')
+            except Exception as e:
+                print(f'Error during gRPC call or block update for slave block {block["_id"]}: {e}')
+                continue
+
 
 
 def StartServer(ip: str, port: int):
