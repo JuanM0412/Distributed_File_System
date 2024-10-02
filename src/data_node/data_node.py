@@ -104,38 +104,60 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
         return data_node_pb2.HeartbeatResponse(alive=True)
 
     def AskForBlock(self, request, context):
-        node_to_ask_id = ObjectId(request.node_id)
-        node_to_ask = dict(database.dataNodes.find_one({'_id': node_to_ask_id}))
-        if node_to_ask is None:
-            return data_node_pb2.AskForBlockResponse(status=False)
-
-        block_metadata = dict(database.metaData.find_one({'Blocks': str(request.block_id)}))
-        if block_metadata is None:
-            return data_node_pb2.AskForBlockResponse(status=False)
-
-        filename = request.filename
-
         try:
-            channel = grpc.insecure_channel(f'{node_to_ask["Ip"]}:{node_to_ask["Port"]}')
-            stub = data_node_pb2_grpc.DataNodeStub(channel)
+            print(f"Received request for block ID: {request.block_id} from node ID: {request.node_id}")
+            
+            node_to_ask_id = ObjectId(request.node_id)
+            node_to_ask = dict(database.dataNodes.find_one({'_id': node_to_ask_id}))
+            
+            if node_to_ask is None:
+                print(f"Error: Node {node_to_ask_id} not found in dataNodes.")
+                return data_node_pb2.AskForBlockResponse(status=False)
+            
+            print(f"Node to ask: {node_to_ask}")
+            
+            block_metadata = dict(database.metaData.find_one({'Blocks': str(request.block_id)}))
+            if block_metadata is None:
+                print(f"Error: Block {request.block_id} not found in metaData.")
+                return data_node_pb2.AskForBlockResponse(status=False)
+            
+            print(f"Block metadata: {block_metadata}")
 
-            response = stub.GetFile(
-                data_node_pb2.GetFileRequest(
-                    filename=filename, 
-                    username=block_metadata['Owner']
+            filename = request.filename
+            print(f"Filename to retrieve: {filename}")
+
+            try:
+                print(f"Connecting to node {node_to_ask['Ip']}:{node_to_ask['Port']}")
+                channel = grpc.insecure_channel(f'{node_to_ask["Ip"]}:{node_to_ask["Port"]}')
+                stub = data_node_pb2_grpc.DataNodeStub(channel)
+
+                response = stub.GetFile(
+                    data_node_pb2.GetFileRequest(
+                        filename=filename, 
+                        username=block_metadata['Owner']
+                    )
                 )
-            )
+                print("File request sent successfully.")
+            except Exception as e:
+                print(f"Error during gRPC file request: {e}")
+                return data_node_pb2.AskForBlockResponse(status=False)
+
+            if not response.file_data:
+                print(f"Error: No file data received for file {filename}.")
+                return data_node_pb2.AskForBlockResponse(status=False)
+
+            path = PARTITIONS_DIR
+            os.makedirs(path, exist_ok=True)
+            full_file_path = os.path.join(path, os.path.basename(filename))
+
+            print(f"Saving file to {full_file_path}")
+            with open(full_file_path, 'wb') as f:
+                f.write(response.file_data)
+
+            print(f"File {filename} saved successfully.")
+            return data_node_pb2.AskForBlockResponse(status=True)
+
         except Exception as e:
+            print(f"Unexpected error in AskForBlock: {e}")
             return data_node_pb2.AskForBlockResponse(status=False)
 
-        if not response.file_data:
-            return data_node_pb2.AskForBlockResponse(status=False)
-
-        path = PARTITIONS_DIR
-        os.makedirs(path, exist_ok=True)
-        full_file_path = os.path.join(path, os.path.basename(filename))
-
-        with open(full_file_path, 'wb') as f:
-            f.write(response.file_data)
-
-        return data_node_pb2.AskForBlockResponse(status=True)
