@@ -289,7 +289,6 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                     self.data_nodes_connections[data_node['_id']] = time.time()
                 else:
                     time_difference = time.time() - self.data_nodes_connections[data_node['_id']]
-                    print('time difference', time_difference)
                     if time_difference >= 10:
                         print(f'Time difference: {time_difference}, Data node {data_node["_id"]} is dead')
                         database.dataNodes.update_one({'_id': data_node['_id']}, {'$set': {'IsActive': False}})
