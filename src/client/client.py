@@ -131,7 +131,7 @@ class Client:
         filename_extension = filename.split('.')[1]
         for node in data_nodes:
             data_node = database.dataNodes.find_one({'_id': ObjectId(data_nodes[node])})
-            data_node_channel = grpc.insecure_channel(f'{data_node['Ip']}:{data_node['Port']}', options=options)
+            data_node_channel = grpc.insecure_channel(f'{data_node["Ip"]}:{data_node["Port"]}', options=options)
             data_node_stub = data_node_pb2_grpc.DataNodeStub(data_node_channel)
             filename_ = filename_name + '_block_' + str(node) + '.' + filename_extension
             try:
