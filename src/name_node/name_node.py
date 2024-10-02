@@ -395,7 +395,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
                 continue
 
             try:
-                print(f'Asking {new_slave["Ip"]}:{new_slave["Port"]} to get block {block_file_name} from {block['Master']}')
+                print(f'Asking {new_slave["Ip"]}:{new_slave["Port"]} to get block {block_file_name} from {block["Master"]}')
                 channel = grpc.insecure_channel(f'{new_slave["Ip"]}:{new_slave["Port"]}')
                 stub = data_node_pb2_grpc.DataNodeStub(channel)
                 response = stub.AskForBlock(
