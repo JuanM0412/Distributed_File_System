@@ -21,7 +21,7 @@ This project aims to design and implement a minimalist block-based distributed f
 
 This DFS follows a block-based design but incorporates key characteristics from object storage systems, specifically the Write-Once-Read-Many (WORM) model commonly found in services like AWS S3. Files are split into blocks, and those blocks are distributed across different data nodes, with replication to ensure fault tolerance and data redundancy.
 
-### 1.1 Key Features
+### 1.1. Key Features
 
 - **Block-Based Architecture:** Files are partitioned into blocks and distributed across different data nodes, allowing parallel reading and writing operations.
 - **Replication for Fault Tolerance:** Each block is replicated across at least two data nodes, ensuring the system can tolerate node failures.
