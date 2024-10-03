@@ -31,7 +31,6 @@ This DFS follows a block-based design but incorporates key characteristics from 
 - **Basic Command-Line Interface (CLI):** A minimalistic CLI is provided for basic file operations, including ls, cd, put, get, mkdir, rmdir, and rm.
 - **Basic Authentication:** Simple user authentication (username/password) is implemented to ensure that each user can only view and manipulate their files.
 
-
 ## 2. High-Level Desing (Architecture)
 
 ## 3. Description of the development and technical environment: programming language, libraries, packages, etc.
@@ -60,7 +59,7 @@ This DFS follows a block-based design but incorporates key characteristics from 
     python -m venv venvname
     source venvname/bin/activate
     ```
-    **Note:** Replace `venvname` with a more appropriate name, such as `p2p_network`.
+    **Note:** Replace `venvname` with a more appropriate name, such as `file_system`.
 
 6. Install the dependencies:
     ```
@@ -86,7 +85,7 @@ This DFS follows a block-based design but incorporates key characteristics from 
 
 Python (3.12.x) was used as programming language and gRPC (1.66.0) as RPC middleware. Among the most relevant libraries used were the native Python libraries, such as pydantic (2.9.1), dotenv (1.0.1), pymongo (4.8.0) and tomli (2.0.1), among others necessary for the implementation of certain functionalities (each of these libraries can be found in the `requirements.txt` file). A high coupling in the development was avoided. In addition, for the demonstration the data node, name node, and client were deployed on EC2 (Ubuntu 24.04) AWS instances.
 
-### 3.3. Parámetros
+### 3.3. Parameters
 
 As for the program parameters, there is a file called `.env.example` that must be renamed to `.env`. Within this file are the project execution parameters, which include the attributes of the name node, client, and data node, such as the IP address, port, block size, and the directories where the blocks will be stored, among others. In addition, there are also the parameters for the database connection.
 
