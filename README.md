@@ -11,7 +11,7 @@
 - Miguel Ángel Hoyos V. (mahoyosv@eafit.edu.co)
 - Santiago Neusa R. (sneusar@eafit.edu.co)
 - Sebastian Restrepo O. (srestrep74@eafit.edu.co)
-- Luisa Maria Alvarez R. (lmalvarez8@eafit.edu.co)
+- Luisa Maria Alvarez G. (lmalvarez8@eafit.edu.co)
 
 ### Professor:
 - Edwin Nelson Montoya M. (emontoya@eafit.edu.co)
