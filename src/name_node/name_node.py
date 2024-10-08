@@ -1,8 +1,10 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
+from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
 import grpc
-import json
+import threading
 from concurrent import futures
 import random
+import time
 from src.models.datanode import DataNode
 from src.models.namenode import Block, MetaData
 from src.models.user import User
@@ -15,11 +17,17 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
     def __init__(self, ip: str, port: int):
         self.ip = ip
         self.port = port
+        self.data_nodes_connections = {}
 
     def Register(self, request, context):
         ip = request.ip
         port = request.port
         capacity_MB = request.capacity_MB
+
+        if database.dataNodes.find_one({'Ip': ip, 'Port': port}):
+            database.dataNodes.update_one({'Ip': ip, 'Port': port}, {'$set': {'IsActive': True}})
+            print(f'Data node {ip}:{port} was already registered')
+            return name_node_pb2.RegisterResponse(id=str(database.dataNodes.find_one({'Ip': ip, 'Port': port})['_id']))
 
         data_node_info = DataNode(
             Ip=ip,
@@ -100,7 +108,7 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
         return response
 
     def RandomWeight(self, chunk_size, excluded_nodes):
-        data_nodes = list(database.dataNodes.find())
+        data_nodes = list(database.dataNodes.find({'IsActive': True}))
         filtered_data_nodes = []
         for data_node in data_nodes:
             if data_node.get('CapacityMB', 0) >= chunk_size and data_node['_id'] not in excluded_nodes:
@@ -256,17 +264,182 @@ class Server(name_node_pb2_grpc.NameNodeServiceServicer):
         else:
             return name_node_pb2.ValidateUserResponse(
                 status='Invalid username or password')
+        
+    def CheckAliveDataNodes(self):
+
+        while True:
+
+            data_nodes = database.dataNodes.find({'IsActive': True})
+
+            for data_node in data_nodes:
+                if data_node['_id'] not in self.data_nodes_connections:
+                    self.data_nodes_connections[data_node['_id']] = time.time()
+
+                alive = False
+
+                try:
+                    with grpc.insecure_channel(f'{data_node["Ip"]}:{data_node["Port"]}') as channel:
+                        stub = data_node_pb2_grpc.DataNodeStub(channel)
+                        response = stub.Heartbeat(data_node_pb2.HeartbeatRequest())
+                        alive = bool(response.alive)
+                except Exception:
+                    pass
+
+                if alive:
+                    self.data_nodes_connections[data_node['_id']] = time.time()
+                else:
+                    time_difference = time.time() - self.data_nodes_connections[data_node['_id']]
+                    if time_difference >= 10:
+                        print(f'Time difference: {time_difference}, Data node {data_node["_id"]} is dead')
+                        database.dataNodes.update_one({'_id': data_node['_id']}, {'$set': {'IsActive': False}})
+                        self.RelocateBlocks(str(data_node['_id']))
+            
+    def RelocateBlocks(self, data_node_id):
+
+        try:
+            master_blocks = list(database.blocks.find({'Master': data_node_id}))
+            slave_blocks = list(database.blocks.find({'Slaves': data_node_id}))
+            print(f'Master blocks: {master_blocks}')
+            print(f'Slave blocks: {slave_blocks}')
+        except Exception as e:
+            print(f'Error fetching master or slave blocks: {e}')
+            return
+
+        for block in master_blocks:
+            try:
+                try:
+                    block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
+                    block_id = str(block['_id'])
+                    print(f'Block metadata (string ID): {block_metadata}')
+                except:
+                    block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(block['_id'])}))
+                    block_id = str(block['_id'])
+                    print(f'Block metadata (ObjectId): {block_metadata}')
+
+                if not block_metadata:
+                    print(f'Error: Block metadata not found for block {block_id}')
+                    continue
+
+                name, ext = block_metadata['Name'].rsplit('.', 1)
+                try:
+                    block_index = block_metadata['Blocks'].index(str(block_id))
+                except:
+                    block_index = block_metadata['Blocks'].index(ObjectId(block_id))
+
+                block_file_name = f"{name[1:]}_block_{block_index}.{ext}"
+                print(f'Block filename: {block_file_name}')
+            except Exception as e:
+                print(f'Error processing master block {block["_id"]}: {e}')
+                continue
+
+            try:
+                excluded_nodes = [ObjectId(data_node_id), ObjectId(block['Slaves'][0]), ObjectId(block['Slaves'][1])]
+                new_master_id = self.RandomWeight(128, excluded_nodes)
+                new_master = dict(database.dataNodes.find_one({'_id': ObjectId(new_master_id)}))
+                print(f'New master: {new_master}')
+            except Exception as e:
+                print(f'Error fetching new master for block {block["_id"]}: {e}')
+                continue
+
+            try:
+                print(f'Moving block {block_file_name} to {new_master["Ip"]}:{new_master["Port"]}')
+                channel = grpc.insecure_channel(f'{new_master["Ip"]}:{new_master["Port"]}')
+                stub = data_node_pb2_grpc.DataNodeStub(channel)
+                response = stub.AskForBlock(
+                    data_node_pb2.AskForBlockRequest(
+                        block_id=str(block['_id']),
+                        node_id=str(block['Slaves'][0]),
+                        filename=block_file_name
+                    )
+                )
+
+                if response.status:
+                    database.blocks.update_one({'_id': block['_id']}, {'$set': {'Master': new_master_id}})
+                    print(f'Block {block_file_name} moved successfuly to {new_master["Ip"]}:{new_master["Port"]}')
+                else:
+                    print(f'Block {block["_id"]} not updated')
+            except Exception as e:
+                print(f'Error during gRPC call or block update for block {block["_id"]}: {e}')
+                continue
+
+        for block in slave_blocks:
+            try:
+                try:
+                    block_metadata = dict(database.metaData.find_one({'Blocks': str(block['_id'])}))
+                    block_id = str(block['_id'])
+                    print(f'Block metadata (string ID): {block_metadata}')
+                except:
+                    block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(block['_id'])}))
+                    block_id = str(block['_id'])
+                    print(f'Block metadata (ObjectId): {block_metadata}')
+
+                if not block_metadata:
+                    print(f'Error: Block metadata not found for block {block_id}')
+                    continue
+
+                name, ext = block_metadata['Name'].rsplit('.', 1)
+                try:
+                    block_index = block_metadata['Blocks'].index(str(block_id))
+                except:
+                    block_index = block_metadata['Blocks'].index(ObjectId(block_id))
+
+                block_file_name = f"{name[1:]}_block_{block_index}.{ext}"
+                print(f'Block filename: {block_file_name}')
+            except Exception as e:
+                print(f'Error processing slave block {block["_id"]}: {e}')
+                continue
+
+            try:
+                excluded_nodes = [ObjectId(data_node_id), ObjectId(block['Slaves'][0]), ObjectId(block['Slaves'][1])]
+                new_slave_id = self.RandomWeight(128, excluded_nodes)
+                new_slave = dict(database.dataNodes.find_one({'_id': ObjectId(new_slave_id)}))
+                print(f'New slave: {new_slave}')
+            except Exception as e:
+                print(f'Error fetching new slave for block {block["_id"]}: {e}')
+                continue
+
+            try:
+                print(f'Asking {new_slave["Ip"]}:{new_slave["Port"]} to get block {block_file_name} from {block["Master"]}')
+                channel = grpc.insecure_channel(f'{new_slave["Ip"]}:{new_slave["Port"]}')
+                stub = data_node_pb2_grpc.DataNodeStub(channel)
+                response = stub.AskForBlock(
+                    data_node_pb2.AskForBlockRequest(
+                        block_id=str(block['_id']),
+                        node_id=str(block['Master']),
+                        filename=block_file_name
+                    )
+                )
+
+                if response.status:
+                    new_slaves = [str(slave) for slave in block['Slaves'] if slave != data_node_id] + [str(new_slave_id)]
+                    database.blocks.update_one({'_id': block['_id']}, {'$set': {'Slaves': new_slaves}})
+                    print(f'Block {block_file_name} moved successfuly to {new_slave["Ip"]}:{new_slave["Port"]}')
+                else:
+                    print(f'Block {block["_id"]} not updated')
+            except Exception as e:
+                print(f'Error during gRPC call or block update for slave block {block["_id"]}: {e}')
+                continue
+
 
 
 def StartServer(ip: str, port: int):
     print('Server is running')
+    
     options = [
         ('grpc.max_send_message_length', 1024 * 1024 * 1024),
         ('grpc.max_receive_message_length', 1024 * 1024 * 1024)
     ]
+    
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=options)
-    name_node_pb2_grpc.add_NameNodeServiceServicer_to_server(
-        Server(ip=ip, port=port), server)
+    
+    name_node = Server(ip=ip, port=port)
+    
+    name_node_pb2_grpc.add_NameNodeServiceServicer_to_server(name_node, server)
+    
     server.add_insecure_port(f'{ip}:{port}')
+    
     server.start()
+
+    threading.Thread(target=name_node.CheckAliveDataNodes, daemon=True).start()
+
     server.wait_for_termination()
