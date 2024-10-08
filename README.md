@@ -90,3 +90,4 @@ Python (3.12.x) was used as programming language and gRPC (1.66.0) as RPC middle
 As for the program parameters, there is a file called `.env.example` that must be renamed to `.env`. Within this file are the project execution parameters, which include the attributes of the name node, client, and data node, such as the IP address, port, block size, and the directories where the blocks will be stored, among others. In addition, there are also the parameters for the database connection.
 
 ## 4. Video support
+- https://youtu.be/6sVKTpLxui0
