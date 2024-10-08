@@ -32,6 +32,9 @@ This DFS follows a block-based design but incorporates key characteristics from 
 - **Basic Authentication:** Simple user authentication (username/password) is implemented to ensure that each user can only view and manipulate their files.
 
 ## 2. High-Level Desing (Architecture)
+![image](https://github.com/user-attachments/assets/33bac8c1-f909-489c-a61d-44b7ec3c1dce)
+![image](https://github.com/user-attachments/assets/c6d76555-f699-48fb-af33-9eee92238b6b)
+
 
 ## 3. Description of the development and technical environment: programming language, libraries, packages, etc.
 
