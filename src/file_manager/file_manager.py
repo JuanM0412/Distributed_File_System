@@ -67,7 +67,6 @@ class FileManager:
             current_dir = next(
                 (item for item in current_dir["Contents"] if item["IsDir"] and item["Name"] == part),
                 None)
-            
 
         return current_dir
 
@@ -144,7 +143,7 @@ class FileManager:
                 print(f"{BLUE}{item['Name']}/{RESET}")
             else:
                 print(f"{WHITE}{item['Name']}{RESET}")
-    
+
     def DirectoryExists(self, path):
         user_data = self.users_collection.find_one({"Username": self.username})
         if not user_data:
@@ -155,6 +154,10 @@ class FileManager:
         return result is not None
 
     def Put(self, path: str, file_name: str, file_size: int = 0):
+        filename = file_name.replace('\\', '/').split('/')[-1]
+        filename = "/" + filename
+        print("Path in put:", path)
+        print("File name in put:", filename)
         if self.username is None:
             print("Username is not set. Please register first")
             return
@@ -171,13 +174,13 @@ class FileManager:
             print(f"Directory {path} not found")
             return
 
-        if any(item['Name'] == file_name and not item['IsDir']
+        if any(item['Name'] == filename and not item['IsDir']
                for item in current_dir['Contents']):
-            print(f"File {file_name} already exists in {path}")
+            print(f"File {filename} already exists in {path}")
             return
 
         current_dir['Contents'].append({
-            "Name": file_name,
+            "Name": filename,
             "IsDir": False,
             "Contents": None,
             "FileSize": file_size
@@ -188,7 +191,7 @@ class FileManager:
             {"$set": {"Directories": directories}}
         )
 
-        print(f"File {file_name} added to {path} successfully")
+        print(f"File {filename} added to {path} successfully")
 
     def Rm(self, path: str, file_name: str):
         if self.username is None:
@@ -224,3 +227,23 @@ class FileManager:
             {"Username": self.username},
             {"$set": {"Directories": directories}}
         )
+
+    def ListFiles(self, path: str):
+        if self.username is None:
+            print("Username is not set. Please register first")
+            return []
+
+        user_data = self.users_collection.find_one({"Username": self.username})
+        if not user_data:
+            print("User not found")
+            return []
+
+        directories = user_data['Directories']
+        dir_to_list = self.FindDirectory(directories, path)
+
+        if dir_to_list is None:
+            print(f"Directory {path} not found")
+            return []
+
+        files = [item['Name'] for item in dir_to_list['Contents'] if not item['IsDir']]
+        return files

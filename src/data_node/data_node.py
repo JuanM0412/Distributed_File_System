@@ -1,10 +1,12 @@
 from src.rpc.name_node import name_node_pb2_grpc, name_node_pb2
 from src.rpc.data_node import data_node_pb2_grpc, data_node_pb2
 from utils.utils import GetFileSize, GetFileChunks, SaveChunksToFile
-from config import MB_IN_BYTES
+from config import MB_IN_BYTES, DOWNLOADS_DIR, PARTITIONS_DIR
 import grpc
 import os
+from bson import ObjectId
 from concurrent import futures
+from config.db import database
 
 
 class DataNode(data_node_pb2_grpc.DataNodeServicer):
@@ -29,50 +31,45 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
             self.name_node_channel)
 
     def SendFile(self, request, context):
-        current_dir = os.path.dirname(os.path.abspath(__file__)) 
-        
-        storage_base_dir = os.path.join(current_dir, 'storage')
+        file_dir = PARTITIONS_DIR
 
-        user_dir = os.path.join(storage_base_dir, request.username)
-        os.makedirs(user_dir, exist_ok=True) 
+        os.makedirs(file_dir, exist_ok=True)
 
-        # Change this to the user's directory
-        file_dir = r'C:\Users\Sebastian\Downloads'
-        print('File dir:', file_dir)
-        os.makedirs(file_dir, exist_ok=True)  
-
-        block_file_name = f"block_{request.block_number}"
-        block_file_path = os.path.join(file_dir, block_file_name)
+        filename = request.filename.replace('\\', '/').split('/')[-1]
+        name, ext = filename.rsplit('.', 1)
+        block_file_name = f"{name}_block_{request.block_number}.{ext}"
+        block_file_path = os.path.join(file_dir, block_file_name) if not block_file_name.startswith('/') else os.path.join(file_dir, block_file_name.lstrip('/'))
 
         with open(block_file_path, 'wb') as f:
             f.write(request.block_data)
 
         block_size_MB = len(request.block_data) / MB_IN_BYTES
-        print(f"Received block {request.block_number} of size {block_size_MB} MB")
-        print(f"Capacity before: {self.capacity_MB} MB")
         self.capacity_MB -= block_size_MB
-        print(f"Capacity after: {self.capacity_MB} MB")
-        
+
         file_size = os.path.getsize(block_file_path)
         return data_node_pb2.Reply(length=file_size)
 
-    
     def GetFile(self, request, context):
-        filename = os.path.join(self.dir, request.filename)
+        path = PARTITIONS_DIR
+        print("Path in getfile:", path)
+        filename = os.path.join(path, request.filename).replace('\\', '/')
+        print("Filename in getfile:", filename)
+
         if not os.path.exists(filename):
             context.abort(
                 grpc.StatusCode.NOT_FOUND,
                 f"File {request.filename} not found")
 
-        for chunk in GetFileChunks(filename):
-            yield chunk
+        file_data = b''.join(GetFileChunks(filename))
+
+        return data_node_pb2.GetFileResponse(file_data=file_data)
 
     def StartServer(self):
         options = [
-            ('grpc.max_send_message_length', 200 * 1024 * 1024),
-            ('grpc.max_receive_message_length', 200 * 1024 * 1024),
+            ('grpc.max_send_message_length', 1 * 1024 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 1 * 1024 * 1024 * 1024),
         ]
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10),options=options)
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=options)
         data_node_pb2_grpc.add_DataNodeServicer_to_server(self, server)
         server.add_insecure_port(f'{self.ip}:{self.port}')
         server.start()
@@ -86,3 +83,84 @@ class DataNode(data_node_pb2_grpc.DataNodeServicer):
                     self.capacity_MB)))
         self.id = response.id
         print(f'Registered with id: {self.id}')
+
+    def DeleteFile(self, request, context):
+        path = PARTITIONS_DIR
+        filename = os.path.join(path, request.filename)
+
+        if not os.path.exists(filename):
+            context.abort(
+                grpc.StatusCode.NOT_FOUND,
+                f"File {request.filename} not found")
+
+        try:
+            os.remove(filename)
+            print(f"File {request.filename} deleted successfully")
+            return data_node_pb2.DeleteFileResponse(success=True)
+        except Exception as e:
+            print("Continue")
+
+    def Heartbeat(self, request, context):
+        return data_node_pb2.HeartbeatResponse(alive=True)
+
+    def AskForBlock(self, request, context):
+        try:
+            print(f"Received request for block ID: {request.block_id} from node ID: {request.node_id}")
+            
+            node_to_ask_id = ObjectId(request.node_id)
+            node_to_ask = dict(database.dataNodes.find_one({'_id': node_to_ask_id}))
+            
+            if node_to_ask is None:
+                print(f"Error: Node {node_to_ask_id} not found in dataNodes.")
+                return data_node_pb2.AskForBlockResponse(status=False)
+            
+            print(f"Node to ask: {node_to_ask}")
+            try:
+                block_metadata = dict(database.metaData.find_one({'Blocks': str(request.block_id)}))
+            except:
+                block_metadata = dict(database.metaData.find_one({'Blocks': ObjectId(request.block_id)}))
+
+            if block_metadata is None:
+                print(f"Error: Block {request.block_id} not found in metaData.")
+                return data_node_pb2.AskForBlockResponse(status=False)
+            
+            print(f"Block metadata: {block_metadata}")
+
+            filename = request.filename
+            print(f"Filename to retrieve: {filename}")
+
+            try:
+                print(f"Connecting to node {node_to_ask['Ip']}:{node_to_ask['Port']}")
+                channel = grpc.insecure_channel(f'{node_to_ask["Ip"]}:{node_to_ask["Port"]}')
+                stub = data_node_pb2_grpc.DataNodeStub(channel)
+
+                response = stub.GetFile(
+                    data_node_pb2.GetFileRequest(
+                        filename=filename, 
+                        username=block_metadata['Owner']
+                    )
+                )
+                print("File request sent successfully.")
+            except Exception as e:
+                print(f"Error during gRPC file request: {e}")
+                return data_node_pb2.AskForBlockResponse(status=False)
+
+            if not response.file_data:
+                print(f"Error: No file data received for file {filename}.")
+                return data_node_pb2.AskForBlockResponse(status=False)
+
+            path = PARTITIONS_DIR
+            os.makedirs(path, exist_ok=True)
+            full_file_path = os.path.join(path, os.path.basename(filename))
+
+            print(f"Saving file to {full_file_path}")
+            with open(full_file_path, 'wb') as f:
+                f.write(response.file_data)
+
+            print(f"File {filename} saved successfully.")
+            return data_node_pb2.AskForBlockResponse(status=True)
+
+        except Exception as e:
+            print(f"Unexpected error in AskForBlock: {e}")
+            return data_node_pb2.AskForBlockResponse(status=False)
+
