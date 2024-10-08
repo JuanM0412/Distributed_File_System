@@ -5,7 +5,9 @@ package nameNode;
 service NameNodeService {
   // DataNodes
   rpc Register (RegisterRequest) returns (RegisterResponse);
-  rpc GetDataNodes (DataNodesRequest) returns (DataNodesResponse);
+  rpc GetDataNodesForUpload (DataNodesUploadRequest) returns (DataNodesResponse);
+  rpc GetDataNodesForDownload (DataNodesDownloadRequest) returns (DataNodesDownloadResponse);
+  rpc GetDataNodesForRemove (DataNodesRemoveRequest) returns (DataNodesRemoveResponse);
 
   // Users
   rpc AddUser (AddUserRequest) returns (AddUserResponse);
@@ -15,26 +17,29 @@ service NameNodeService {
 message RegisterRequest {
   string ip = 1;
   string port = 2;
-  int32 storage = 3;
+  double capacity_MB = 3;
 }
 
 message RegisterResponse {
   string id = 1;
 }
 
-message DataNodesRequest {
+message DataNodesUploadRequest {
   string file = 1;
+  double size = 2;
+  string username = 3;
 }
 
 message DataNodesResponse {
   repeated DataNodeInfo nodes = 1;
+  string block_id = 2; 
 }
 
 message DataNodeInfo {
   string id = 1;
   string ip = 2;
   string port = 3;
-  int32 storage = 4;
+  double capacity_MB = 4;
 }
 
 message AddUserRequest {
@@ -54,3 +59,31 @@ message ValidateUserRequest {
 message ValidateUserResponse {
   string status = 1;
 }
+
+message DataNodesDownloadRequest {
+  string file = 1;
+  string username = 2;
+}
+
+message DataNodesDownloadResponse {
+  map<int32, string> blocks = 1;
+}
+
+message DataNodesRemoveRequest {
+  string file = 1;
+  string username = 2;
+}
+
+message DataNodesRemoveResponse {
+  repeated BlockInfo blocks = 1;
+}
+
+message BlockInfo {
+  repeated DataNodeInfo nodes = 1;
+}
+
+message BlockList {
+  repeated string block_ids = 1;
+}
+
+

@@ -1,4 +1,4 @@
-from src.name_node.name_node import *
+from src.name_node.name_node import StartServer
 from config import SERVER_IP, SERVER_PORT
 
 

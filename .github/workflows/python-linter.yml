@@ -1,0 +1,29 @@
+name: Backend Linter
+
+on:
+  push:
+    branches: ["development"]
+  pull_request:
+    branches: ["development"]
+
+jobs:
+  linter:
+    name: Run Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run autopep8 on all Python files
+        run: |
+          find . -name "*.py" -not -path "./venv/*" -not -path "./__pycache__/*" | xargs autopep8 --in-place --aggressive --aggressive
